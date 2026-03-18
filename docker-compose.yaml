@@ -1,0 +1,18 @@
+version: '3.8'
+
+name: SolvdTaxi
+services:
+  UMySQL:
+    image: mysql:latest
+    ports:
+      - "8099:3306"
+    restart: always
+    environment:
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./src/main/resources/sql/DDL.sql:/docker-entrypoint-initdb.d/01-ddl.sql:ro
+      - ./src/main/resources/sql/DML.sql:/docker-entrypoint-initdb.d/02-dml.sql:ro
+      - mysql_data:/var/lib/mysql
+volumes:
+  mysql_data:
