@@ -2,9 +2,9 @@ package ua.solvd.taxi.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.model.impl.PromoCode;
-import ua.solvd.taxi.service.PromoCodeService;
-import ua.solvd.taxi.service.impl.PromoCodeCodeServiceImpl;
+import ua.solvd.taxi.domain.model.impl.PromoCode;
+import ua.solvd.taxi.domain.service.PromoCodeService;
+import ua.solvd.taxi.domain.service.impl.PromoCodeCodeServiceImpl;
 
 public class PromoCodeController {
     private static final Logger logger = LogManager.getLogger(PromoCodeController.class);

@@ -1,0 +1,18 @@
+package ua.solvd.taxi.domain.model;
+
+import lombok.Getter;
+
+import java.util.UUID;
+
+@Getter
+public abstract class Entity {
+    private final UUID uuid;
+
+    public Entity() {
+        this.uuid = UUID.randomUUID();
+    }
+
+    protected Entity(UUID uuid) {
+        this.uuid = uuid;
+    }
+}

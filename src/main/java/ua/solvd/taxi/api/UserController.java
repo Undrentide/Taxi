@@ -3,10 +3,10 @@ package ua.solvd.taxi.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.model.impl.Role;
-import ua.solvd.taxi.model.impl.User;
-import ua.solvd.taxi.service.UserService;
-import ua.solvd.taxi.service.impl.UserServiceImpl;
+import ua.solvd.taxi.domain.model.impl.Role;
+import ua.solvd.taxi.domain.model.impl.User;
+import ua.solvd.taxi.domain.service.UserService;
+import ua.solvd.taxi.domain.service.impl.UserServiceImpl;
 
 public class UserController {
     private static final Logger logger = LogManager.getLogger(UserController.class);

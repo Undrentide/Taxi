@@ -2,9 +2,9 @@ package ua.solvd.taxi.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.model.impl.Car;
-import ua.solvd.taxi.service.CarService;
-import ua.solvd.taxi.service.impl.CarServiceImpl;
+import ua.solvd.taxi.domain.model.impl.Car;
+import ua.solvd.taxi.domain.service.CarService;
+import ua.solvd.taxi.domain.service.impl.CarServiceImpl;
 
 import java.util.List;
 
