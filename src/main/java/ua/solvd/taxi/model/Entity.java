@@ -11,4 +11,8 @@ public abstract class Entity {
     public Entity() {
         this.uuid = UUID.randomUUID();
     }
+
+    protected Entity(UUID uuid) {
+        this.uuid = uuid;
+    }
 }
