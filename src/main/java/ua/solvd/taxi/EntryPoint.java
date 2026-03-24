@@ -7,11 +7,16 @@ import ua.solvd.taxi.api.DriverController;
 import ua.solvd.taxi.api.OrderController;
 import ua.solvd.taxi.api.PromoCodeController;
 import ua.solvd.taxi.api.UserController;
+import ua.solvd.taxi.domain.dal.UserDAO;
+import ua.solvd.taxi.domain.dal.impl.JDBCUserDAOImpl;
+import ua.solvd.taxi.domain.dal.impl.XMLUserDAOImpl;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.model.impl.PromoCode;
 import ua.solvd.taxi.domain.model.impl.Region;
 import ua.solvd.taxi.domain.model.impl.Role;
 import ua.solvd.taxi.domain.model.impl.User;
+import ua.solvd.taxi.domain.service.UserService;
+import ua.solvd.taxi.domain.service.impl.UserServiceImpl;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
@@ -19,7 +24,9 @@ import java.util.Scanner;
 public class EntryPoint {
     private static final Logger logger = LogManager.getLogger(EntryPoint.class);
     private static final Scanner scanner = new Scanner(System.in);
-    private static final UserController userController = new UserController();
+    private static final UserDAO userDAO = new XMLUserDAOImpl();
+    private static final UserService userService = new UserServiceImpl(userDAO);
+    private static final UserController userController = new UserController(userService);
     private static final CarController carController = new CarController();
     private static final DriverController driverController = new DriverController();
     private static final OrderController orderController = new OrderController();
