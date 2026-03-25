@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CarClassDAO extends AbstractDAO implements DAO<Long, CarClass> {
+public class CarClassDAOUtil implements DAO<Long, CarClass> {
 
     @Override
     public CarClass save(CarClass carClass) {
         String sql = "INSERT INTO car_class (name, base_price) VALUES (?, ?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, carClass.getName());
                     preparedStatement.setBigDecimal(2, carClass.getBasePrice());
@@ -35,7 +35,7 @@ public class CarClassDAO extends AbstractDAO implements DAO<Long, CarClass> {
     public Optional<CarClass> findById(Long id) {
         String sql = "SELECT classes.name, classes.base_price FROM car_class AS classes WHERE classes.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -54,7 +54,7 @@ public class CarClassDAO extends AbstractDAO implements DAO<Long, CarClass> {
     public List<CarClass> findAll() {
         String sql = "SELECT classes.name, classes.base_price FROM car_class AS classes";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<CarClass> carClassList = new ArrayList<>();
@@ -73,7 +73,7 @@ public class CarClassDAO extends AbstractDAO implements DAO<Long, CarClass> {
     public boolean update(Long id, CarClass carClass) {
         String sql = "UPDATE car_class SET name = ?, base_price = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, carClass.getName());
                     preparedStatement.setBigDecimal(2, carClass.getBasePrice());
@@ -90,7 +90,7 @@ public class CarClassDAO extends AbstractDAO implements DAO<Long, CarClass> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM car_class WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

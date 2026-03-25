@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.DriverStatus;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class DriverStatusDAO extends AbstractDAO implements DAO<Long, DriverStatus> {
+public class DriverStatusDAOUtil implements DAO<Long, DriverStatus> {
 
     @Override
     public DriverStatus save(DriverStatus status) {
         String sql = "INSERT INTO driver_status (name) VALUES (?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, status.getName());
                     preparedStatement.executeUpdate();
@@ -34,7 +34,7 @@ public class DriverStatusDAO extends AbstractDAO implements DAO<Long, DriverStat
     public Optional<DriverStatus> findById(Long id) {
         String sql = "SELECT status.name FROM driver_status AS status WHERE status.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -53,7 +53,7 @@ public class DriverStatusDAO extends AbstractDAO implements DAO<Long, DriverStat
     public List<DriverStatus> findAll() {
         String sql = "SELECT status.name FROM driver_status AS status";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<DriverStatus> statusList = new ArrayList<>();
@@ -72,7 +72,7 @@ public class DriverStatusDAO extends AbstractDAO implements DAO<Long, DriverStat
     public boolean update(Long id, DriverStatus status) {
         String sql = "UPDATE driver_status SET name = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, status.getName());
                     preparedStatement.setLong(2, id);
@@ -88,7 +88,7 @@ public class DriverStatusDAO extends AbstractDAO implements DAO<Long, DriverStat
     public boolean delete(Long id) {
         String sql = "DELETE FROM driver_status WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

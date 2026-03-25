@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
+public class PaymentDAOUtil implements DAO<Long, Payment> {
 
     @Override
     public Payment save(Payment payment) {
@@ -41,7 +41,7 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
                  VALUES (?, ?, ?, ?)
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long orderId, typeId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
                     preparedStatement.setString(1, payment.getPaymentType().getName());
@@ -78,7 +78,7 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
     public Optional<Payment> findById(Long id) {
         String sql = getBaseSelectQuery() + " WHERE pay.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -98,7 +98,7 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
     public List<Payment> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         List<Payment> paymentList = new ArrayList<>();
@@ -118,7 +118,7 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
     public boolean update(Long id, Payment payment) {
         String sql = "UPDATE payment SET amount = ?, paid_at = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setBigDecimal(1, payment.getAmount());
                     preparedStatement.setTimestamp(2, Timestamp.from(payment.getPaidAt()));
@@ -135,7 +135,7 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM payment WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class DriverLocationDAO extends AbstractDAO implements DAO<Long, DriverLocation> {
+public class DriverLocationDAOUtil implements DAO<Long, DriverLocation> {
 
     @Override
     public DriverLocation save(DriverLocation driverLocation) {
@@ -34,7 +34,7 @@ public class DriverLocationDAO extends AbstractDAO implements DAO<Long, DriverLo
                  VALUES (?, ?, ?, ?)
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long driverId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findDriverIdSql)) {
                     preparedStatement.setString(1, driverLocation.getDriver().getUser().getPhone());
@@ -80,7 +80,7 @@ public class DriverLocationDAO extends AbstractDAO implements DAO<Long, DriverLo
                  WHERE logs.id = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -115,7 +115,7 @@ public class DriverLocationDAO extends AbstractDAO implements DAO<Long, DriverLo
                  INNER JOIN driver_status AS statuses ON drivers.status_id = statuses.id
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<DriverLocation> driverLocationList = new ArrayList<>();
@@ -134,7 +134,7 @@ public class DriverLocationDAO extends AbstractDAO implements DAO<Long, DriverLo
     public boolean update(Long id, DriverLocation driverLocation) {
         String sql = "UPDATE driver_location_log SET latitude = ?, longitude = ?, updated_at = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setDouble(1, driverLocation.getLatitude());
                     preparedStatement.setDouble(2, driverLocation.getLongitude());
@@ -152,7 +152,7 @@ public class DriverLocationDAO extends AbstractDAO implements DAO<Long, DriverLo
     public boolean delete(Long id) {
         String sql = "DELETE FROM driver_location_log WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

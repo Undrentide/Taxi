@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
@@ -14,14 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SupportTicketDAO extends AbstractDAO implements DAO<Long, SupportTicket> {
+public class SupportTicketDAOUtil implements DAO<Long, SupportTicket> {
 
     @Override
     public SupportTicket save(SupportTicket supportTicket) {
         String findUserIdSql = "SELECT id FROM user WHERE phone = ?";
         String insertSql = "INSERT INTO support_ticket (user_id, subject, message, is_resolved) VALUES (?, ?, ?, ?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long userId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findUserIdSql)) {
                     preparedStatement.setString(1, supportTicket.getUser().getPhone());
@@ -51,7 +51,7 @@ public class SupportTicketDAO extends AbstractDAO implements DAO<Long, SupportTi
     public Optional<SupportTicket> findById(Long id) {
         String sql = getBaseSelectQuery() + " WHERE tickets.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -71,7 +71,7 @@ public class SupportTicketDAO extends AbstractDAO implements DAO<Long, SupportTi
     public List<SupportTicket> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         List<SupportTicket> supportTicketList = new ArrayList<>();
@@ -91,7 +91,7 @@ public class SupportTicketDAO extends AbstractDAO implements DAO<Long, SupportTi
     public boolean update(Long id, SupportTicket supportTicket) {
         String sql = "UPDATE support_ticket SET subject = ?, message = ?, is_resolved = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, supportTicket.getSubject());
                     preparedStatement.setString(2, supportTicket.getMessage());
@@ -109,7 +109,7 @@ public class SupportTicketDAO extends AbstractDAO implements DAO<Long, SupportTi
     public boolean delete(Long id) {
         String sql = "DELETE FROM support_ticket WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.PromoCode;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PromoCodeDAO extends AbstractDAO implements DAO<Long, PromoCode> {
+public class PromoCodeDAOUtil implements DAO<Long, PromoCode> {
 
     @Override
     public PromoCode save(PromoCode promoCode) {
         String sql = "INSERT INTO promo_code (code, discount_percent, is_active) VALUES (?, ?, ?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, promoCode.getCode());
                     preparedStatement.setInt(2, promoCode.getDiscountPercent());
@@ -36,7 +36,7 @@ public class PromoCodeDAO extends AbstractDAO implements DAO<Long, PromoCode> {
     public Optional<PromoCode> findById(Long id) {
         String sql = "SELECT promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo WHERE promo.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -55,7 +55,7 @@ public class PromoCodeDAO extends AbstractDAO implements DAO<Long, PromoCode> {
     public List<PromoCode> findAll() {
         String sql = "SELECT promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<PromoCode> promoCodeList = new ArrayList<>();
@@ -73,7 +73,7 @@ public class PromoCodeDAO extends AbstractDAO implements DAO<Long, PromoCode> {
     public Optional<PromoCode> findByCode(String code) {
         String sql = "SELECT promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo WHERE promo.code = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, code);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -92,7 +92,7 @@ public class PromoCodeDAO extends AbstractDAO implements DAO<Long, PromoCode> {
     public boolean update(Long id, PromoCode promoCode) {
         String sql = "UPDATE promo_code SET code = ?, discount_percent = ?, is_active = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, promoCode.getCode());
                     preparedStatement.setInt(2, promoCode.getDiscountPercent());
@@ -110,7 +110,7 @@ public class PromoCodeDAO extends AbstractDAO implements DAO<Long, PromoCode> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM promo_code WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

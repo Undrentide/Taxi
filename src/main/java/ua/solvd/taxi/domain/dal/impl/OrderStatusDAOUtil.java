@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.OrderStatus;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class OrderStatusDAO extends AbstractDAO implements DAO<Long, OrderStatus> {
+public class OrderStatusDAOUtil implements DAO<Long, OrderStatus> {
 
     @Override
     public OrderStatus save(OrderStatus orderStatus) {
         String sql = "INSERT INTO order_status (name) VALUES (?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, orderStatus.getName());
                     preparedStatement.executeUpdate();
@@ -34,7 +34,7 @@ public class OrderStatusDAO extends AbstractDAO implements DAO<Long, OrderStatus
     public Optional<OrderStatus> findById(Long id) {
         String sql = "SELECT status.name FROM order_status AS status WHERE status.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -53,7 +53,7 @@ public class OrderStatusDAO extends AbstractDAO implements DAO<Long, OrderStatus
     public List<OrderStatus> findAll() {
         String sql = "SELECT status.name FROM order_status AS status";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<OrderStatus> orderStatusList = new ArrayList<>();
@@ -71,7 +71,7 @@ public class OrderStatusDAO extends AbstractDAO implements DAO<Long, OrderStatus
     public Optional<OrderStatus> findByName(String name) {
         String sql = "SELECT status.name FROM order_status AS status WHERE status.name = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, name);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -90,7 +90,7 @@ public class OrderStatusDAO extends AbstractDAO implements DAO<Long, OrderStatus
     public boolean update(Long id, OrderStatus orderStatus) {
         String sql = "UPDATE order_status SET name = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, orderStatus.getName());
                     preparedStatement.setLong(2, id);
@@ -106,7 +106,7 @@ public class OrderStatusDAO extends AbstractDAO implements DAO<Long, OrderStatus
     public boolean delete(Long id) {
         String sql = "DELETE FROM order_status WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

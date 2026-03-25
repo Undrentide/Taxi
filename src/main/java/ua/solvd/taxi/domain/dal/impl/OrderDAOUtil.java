@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
+public class OrderDAOUtil implements DAO<Long, Order> {
 
     @Override
     public Order save(Order order) {
@@ -46,7 +46,7 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long clientId, driverId, statusId, regionId;
                 Long promoId = null;
 
@@ -104,7 +104,7 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
     public Optional<Order> findById(Long id) {
         String sql = getBaseSelectQuery() + " WHERE orders.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -124,7 +124,7 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
     public List<Order> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         List<Order> orderList = new ArrayList<>();
@@ -144,7 +144,7 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
     public boolean update(Long id, Order order) {
         String sql = "UPDATE `order` SET status_id = (SELECT id FROM order_status WHERE name = ?) WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, order.getOrderStatus().getName());
                     preparedStatement.setLong(2, id);
@@ -160,7 +160,7 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM `order` WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

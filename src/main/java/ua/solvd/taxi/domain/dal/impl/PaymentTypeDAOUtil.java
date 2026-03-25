@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.PaymentType;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PaymentTypeDAO extends AbstractDAO implements DAO<Long, PaymentType> {
+public class PaymentTypeDAOUtil implements DAO<Long, PaymentType> {
 
     @Override
     public PaymentType save(PaymentType paymentType) {
         String sql = "INSERT INTO payment_type (name) VALUES (?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, paymentType.getName());
                     preparedStatement.executeUpdate();
@@ -34,7 +34,7 @@ public class PaymentTypeDAO extends AbstractDAO implements DAO<Long, PaymentType
     public Optional<PaymentType> findById(Long id) {
         String sql = "SELECT types.name FROM payment_type AS types WHERE types.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -54,7 +54,7 @@ public class PaymentTypeDAO extends AbstractDAO implements DAO<Long, PaymentType
     public List<PaymentType> findAll() {
         String sql = "SELECT types.name FROM payment_type AS types";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         List<PaymentType> paymentTypeList = new ArrayList<>();
@@ -74,7 +74,7 @@ public class PaymentTypeDAO extends AbstractDAO implements DAO<Long, PaymentType
     public boolean update(Long id, PaymentType paymentType) {
         String sql = "UPDATE payment_type SET name = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, paymentType.getName());
                     preparedStatement.setLong(2, id);
@@ -90,7 +90,7 @@ public class PaymentTypeDAO extends AbstractDAO implements DAO<Long, PaymentType
     public boolean delete(Long id) {
         String sql = "DELETE FROM payment_type WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

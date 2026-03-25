@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
@@ -13,14 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CarDAO extends AbstractDAO implements DAO<Long, Car> {
+public class CarDAOUtil implements DAO<Long, Car> {
 
     @Override
     public Car save(Car car) {
         String findClassIdSql = "SELECT id FROM car_class WHERE name = ?";
         String insertCarSql = "INSERT INTO car (brand, model, license_plate, color, class_id) VALUES (?, ?, ?, ?, ?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long classId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findClassIdSql)) {
                     preparedStatement.setString(1, car.getCarClass().getName());
@@ -57,7 +57,7 @@ public class CarDAO extends AbstractDAO implements DAO<Long, Car> {
                  WHERE cars.id = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -83,7 +83,7 @@ public class CarDAO extends AbstractDAO implements DAO<Long, Car> {
                  INNER JOIN car_class AS classes ON cars.class_id = classes.id
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<Car> carList = new ArrayList<>();
@@ -107,7 +107,7 @@ public class CarDAO extends AbstractDAO implements DAO<Long, Car> {
                  WHERE id = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long classId;
                 try (PreparedStatement classStmt = connection.prepareStatement(findClassIdSql)) {
                     classStmt.setString(1, car.getCarClass().getName());
@@ -134,7 +134,7 @@ public class CarDAO extends AbstractDAO implements DAO<Long, Car> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM car WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

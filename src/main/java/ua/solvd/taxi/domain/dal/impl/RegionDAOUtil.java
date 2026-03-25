@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Region;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class RegionDAO extends AbstractDAO implements DAO<Long, Region> {
+public class RegionDAOUtil implements DAO<Long, Region> {
 
     @Override
     public Region save(Region region) {
         String sql = "INSERT INTO region (name, multiplier) VALUES (?, ?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, region.getName());
                     preparedStatement.setBigDecimal(2, region.getMultiplier());
@@ -35,7 +35,7 @@ public class RegionDAO extends AbstractDAO implements DAO<Long, Region> {
     public Optional<Region> findById(Long id) {
         String sql = "SELECT regions.name, regions.multiplier FROM region AS regions WHERE regions.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -55,7 +55,7 @@ public class RegionDAO extends AbstractDAO implements DAO<Long, Region> {
     public List<Region> findAll() {
         String sql = "SELECT regions.name, regions.multiplier FROM region AS regions";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         List<Region> regionList = new ArrayList<>();
@@ -75,7 +75,7 @@ public class RegionDAO extends AbstractDAO implements DAO<Long, Region> {
     public boolean update(Long id, Region region) {
         String sql = "UPDATE region SET name = ?, multiplier = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, region.getName());
                     preparedStatement.setBigDecimal(2, region.getMultiplier());
@@ -92,7 +92,7 @@ public class RegionDAO extends AbstractDAO implements DAO<Long, Region> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM region WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

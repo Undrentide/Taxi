@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class RoleDAO extends AbstractDAO implements DAO<Long, Role> {
+public class RoleDAOUtil implements DAO<Long, Role> {
 
     @Override
     public Role save(Role role) {
         String sql = "INSERT INTO role (name) VALUES (?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, role.getName());
                     preparedStatement.executeUpdate();
@@ -34,7 +34,7 @@ public class RoleDAO extends AbstractDAO implements DAO<Long, Role> {
     public Optional<Role> findById(Long id) {
         String sql = "SELECT r.name FROM role AS r WHERE r.id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -53,7 +53,7 @@ public class RoleDAO extends AbstractDAO implements DAO<Long, Role> {
     public List<Role> findAll() {
         String sql = "SELECT r.name FROM role AS r";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<Role> roleList = new ArrayList<>();
@@ -72,7 +72,7 @@ public class RoleDAO extends AbstractDAO implements DAO<Long, Role> {
     public boolean update(Long id, Role role) {
         String sql = "UPDATE role SET name = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, role.getName());
                     preparedStatement.setLong(2, id);
@@ -88,7 +88,7 @@ public class RoleDAO extends AbstractDAO implements DAO<Long, Role> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM role WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

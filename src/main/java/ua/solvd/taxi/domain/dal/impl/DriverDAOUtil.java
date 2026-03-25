@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
+public class DriverDAOUtil implements DAO<Long, Driver> {
 
     @Override
     public Driver save(Driver driver) {
@@ -35,7 +35,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
                  VALUES (?, ?, ?, ?)
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long userId, carId, statusId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
                     preparedStatement.setString(1, driver.getUser().getPhone());
@@ -84,7 +84,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
                  WHERE drivers.id = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -117,7 +117,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
                  INNER JOIN driver_status AS statuses ON drivers.status_id = statuses.id
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<Driver> driverList = new ArrayList<>();
@@ -151,7 +151,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
                  LIMIT 1
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         if (resultSet.next()) {
@@ -171,7 +171,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
         String findStatusIdSql = "SELECT id FROM driver_status WHERE name = ?";
         String updateSql = "UPDATE driver SET status_id = ?, rating = ? WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long statusId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findStatusIdSql)) {
                     preparedStatement.setString(1, driver.getDriverStatus().getName());
@@ -198,7 +198,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
                      WHERE user_id = (SELECT id FROM user WHERE phone = ?)
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, statusName);
                     preparedStatement.setString(2, phone);
@@ -214,7 +214,7 @@ public class DriverDAO extends AbstractDAO implements DAO<Long, Driver> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM driver WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

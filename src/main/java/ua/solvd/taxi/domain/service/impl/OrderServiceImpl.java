@@ -2,9 +2,9 @@ package ua.solvd.taxi.domain.service.impl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.domain.dal.impl.DriverDAO;
-import ua.solvd.taxi.domain.dal.impl.OrderDAO;
-import ua.solvd.taxi.domain.dal.impl.OrderStatusDAO;
+import ua.solvd.taxi.domain.dal.impl.DriverDAOUtil;
+import ua.solvd.taxi.domain.dal.impl.OrderDAOUtil;
+import ua.solvd.taxi.domain.dal.impl.OrderStatusDAOUtil;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.model.impl.Order;
@@ -18,16 +18,22 @@ import java.time.Instant;
 
 public class OrderServiceImpl implements OrderService {
     private static final Logger logger = LogManager.getLogger(OrderServiceImpl.class);
-    private final OrderDAO orderDAO = new OrderDAO();
-    private final OrderStatusDAO statusDAO = new OrderStatusDAO();
-    private final DriverDAO driverDAO = new DriverDAO();
+    private final OrderDAOUtil orderDAO;
+    private final OrderStatusDAOUtil orderStatusDAO;
+    private final DriverDAOUtil driverDAO;
+
+    public OrderServiceImpl(OrderDAOUtil orderDAO, OrderStatusDAOUtil orderStatusDAO, DriverDAOUtil driverDAO) {
+        this.orderDAO = orderDAO;
+        this.orderStatusDAO = orderStatusDAO;
+        this.driverDAO = driverDAO;
+    }
 
     @Override
     public void save(User client, Driver driver, PromoCode promo, Region region, String from, String to) {
         if (!"available".equalsIgnoreCase(driver.getDriverStatus().getName())) {
             throw new PersistenceException("The selected driver is currently busy or offline.");
         }
-        OrderStatus inProgressStatus = statusDAO.findByName("in_progress")
+        OrderStatus inProgressStatus = orderStatusDAO.findByName("in_progress")
                 .orElseThrow(() -> new PersistenceException("Status 'in_progress' not found."));
         Order order = new Order(client, driver, inProgressStatus, promo, region, from, to, Instant.now());
         orderDAO.save(order);

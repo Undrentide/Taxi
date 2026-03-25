@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.AbstractDAO;
+import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
@@ -14,14 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class UserDAO extends AbstractDAO implements DAO<Long, User> {
+public class UserJDBCDAO implements DAO<Long, User> {
 
     @Override
     public User save(User user) {
         String findRoleIdSql = "SELECT id FROM role WHERE name = ?";
         String insertUserSql = "INSERT INTO user (first_name, last_name, phone, role_id) VALUES (?, ?, ?, ?)";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long roleId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findRoleIdSql)) {
                     preparedStatement.setString(1, user.getRole().getName());
@@ -59,7 +59,7 @@ public class UserDAO extends AbstractDAO implements DAO<Long, User> {
                  WHERE users.id = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -84,7 +84,7 @@ public class UserDAO extends AbstractDAO implements DAO<Long, User> {
                  INNER JOIN role AS roles ON users.role_id = roles.id
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<User> userList = new ArrayList<>();
@@ -109,7 +109,7 @@ public class UserDAO extends AbstractDAO implements DAO<Long, User> {
                  WHERE users.phone = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, phone);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -133,7 +133,7 @@ public class UserDAO extends AbstractDAO implements DAO<Long, User> {
                  WHERE id = ?
                 """;
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 long roleId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findRoleIdSql)) {
                     preparedStatement.setString(1, user.getRole().getName());
@@ -162,7 +162,7 @@ public class UserDAO extends AbstractDAO implements DAO<Long, User> {
     public boolean delete(Long id) {
         String sql = "DELETE FROM user WHERE id = ?";
         try {
-            return execute(connection -> {
+            return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     return preparedStatement.executeUpdate() > 0;

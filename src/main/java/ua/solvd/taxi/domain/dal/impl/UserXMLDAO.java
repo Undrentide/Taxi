@@ -4,7 +4,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.DataAccessException;
 import ua.solvd.taxi.domain.exception.PersistenceException;
@@ -13,7 +12,6 @@ import ua.solvd.taxi.domain.model.impl.User;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -21,7 +19,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,11 +26,15 @@ import java.util.UUID;
 
 public class UserXMLDAO implements DAO<UUID, User> {
     private static final String FILE_PATH = "src/main/resources/user.xml";
+    private final Document document;
+
+    public UserXMLDAO() {
+        this.document = loadDocument();
+    }
 
     @Override
     public User save(User user) {
         try {
-            Document document = getDocument();
             Element root = document.getDocumentElement();
             Element element = document.createElement("user");
             element.appendChild(createNode(document, "uuid", user.getUuid().toString()));
@@ -52,7 +53,6 @@ public class UserXMLDAO implements DAO<UUID, User> {
     @Override
     public Optional<User> findById(UUID id) {
         try {
-            Document document = getDocument();
             NodeList nodeList = document.getElementsByTagName("user");
             String targetUuid = id.toString();
             for (int i = 0; i < nodeList.getLength(); i++) {
@@ -71,7 +71,6 @@ public class UserXMLDAO implements DAO<UUID, User> {
     @Override
     public List<User> findAll() {
         try {
-            Document document = getDocument();
             NodeList nodeList = document.getElementsByTagName("user");
             List<User> userList = new ArrayList<>();
             for (int i = 0; i < nodeList.getLength(); i++) {
@@ -85,7 +84,6 @@ public class UserXMLDAO implements DAO<UUID, User> {
 
     public Optional<User> findUserByPhone(String phone) {
         try {
-            Document document = getDocument();
             NodeList nodeList = document.getElementsByTagName("user");
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Element element = (Element) nodeList.item(i);
@@ -102,7 +100,6 @@ public class UserXMLDAO implements DAO<UUID, User> {
     @Override
     public boolean update(UUID id, User user) {
         try {
-            Document document = getDocument();
             NodeList nodeList = document.getElementsByTagName("user");
             String targetUuid = user.getUuid().toString();
             for (int i = 0; i < nodeList.getLength(); i++) {
@@ -125,7 +122,6 @@ public class UserXMLDAO implements DAO<UUID, User> {
     @Override
     public boolean delete(UUID id) {
         try {
-            Document document = getDocument();
             NodeList nodeList = document.getElementsByTagName("user");
             boolean removed = false;
             String targetUuid = id.toString();
@@ -147,27 +143,21 @@ public class UserXMLDAO implements DAO<UUID, User> {
         }
     }
 
-    private Document getDocument() {
-        File file = new File(FILE_PATH);
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder;
+    private Document loadDocument() {
         try {
-            documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            throw new DataAccessException("Error creating document builder", e);
-        }
-        if (file.exists() && file.length() > 0) {
-            try {
+            File file = new File(FILE_PATH);
+            DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            if (file.exists() && file.length() > 0) {
                 return documentBuilder.parse(file);
-            } catch (SAXException e) {
-                throw new DataAccessException("Error parsing XML file", e);
-            } catch (IOException e) {
-                throw new DataAccessException("Error reading XML file", e);
+            } else {
+                Document document = documentBuilder.newDocument();
+                document.appendChild(document.createElement("users"));
+                return document;
             }
+        } catch (Exception e) {
+            throw new DataAccessException("Initial XML load failed", e);
         }
-        Document document = documentBuilder.newDocument();
-        document.appendChild(document.createElement("users"));
-        return document;
     }
 
     private void saveToFile(Document document) throws TransformerException {
