@@ -2,6 +2,7 @@ package ua.solvd.taxi.domain.dal.impl;
 
 import ua.solvd.taxi.domain.dal.AbstractDAO;
 import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.CarClass;
 
 import java.sql.PreparedStatement;
@@ -14,76 +15,100 @@ import java.util.Optional;
 public class CarClassDAO extends AbstractDAO implements DAO<Long, CarClass> {
 
     @Override
-    public CarClass save(CarClass carClass) throws SQLException {
+    public CarClass save(CarClass carClass) {
         String sql = "INSERT INTO car_class (name, base_price) VALUES (?, ?)";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, carClass.getName());
-                preparedStatement.setBigDecimal(2, carClass.getBasePrice());
-                preparedStatement.executeUpdate();
-                return carClass;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setString(1, carClass.getName());
+                    preparedStatement.setBigDecimal(2, carClass.getBasePrice());
+                    preparedStatement.executeUpdate();
+                    return carClass;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while saving car class.", e);
+        }
     }
 
     @Override
-    public Optional<CarClass> findById(Long id) throws SQLException {
+    public Optional<CarClass> findById(Long id) {
         String sql = "SELECT classes.name, classes.base_price FROM car_class AS classes WHERE classes.id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
-                ResultSet resultSet = preparedStatement.executeQuery();
-                if (resultSet.next()) {
-                    return Optional.of(mapRowToCarClass(resultSet));
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setLong(1, id);
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    if (resultSet.next()) {
+                        return Optional.of(mapRowToCarClass(resultSet));
+                    }
+                    return Optional.empty();
                 }
-                return Optional.empty();
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while finding car class by id.", e);
+        }
     }
 
     @Override
-    public List<CarClass> findAll() throws SQLException {
+    public List<CarClass> findAll() {
         String sql = "SELECT classes.name, classes.base_price FROM car_class AS classes";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                ResultSet resultSet = preparedStatement.executeQuery();
-                List<CarClass> carClassList = new ArrayList<>();
-                while (resultSet.next()) {
-                    carClassList.add(mapRowToCarClass(resultSet));
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    List<CarClass> carClassList = new ArrayList<>();
+                    while (resultSet.next()) {
+                        carClassList.add(mapRowToCarClass(resultSet));
+                    }
+                    return carClassList;
                 }
-                return carClassList;
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while finding all car classes.", e);
+        }
     }
 
     @Override
-    public boolean update(Long id, CarClass carClass) throws SQLException {
+    public boolean update(Long id, CarClass carClass) {
         String sql = "UPDATE car_class SET name = ?, base_price = ? WHERE id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, carClass.getName());
-                preparedStatement.setBigDecimal(2, carClass.getBasePrice());
-                preparedStatement.setLong(3, id);
-                return preparedStatement.executeUpdate() > 0;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setString(1, carClass.getName());
+                    preparedStatement.setBigDecimal(2, carClass.getBasePrice());
+                    preparedStatement.setLong(3, id);
+                    return preparedStatement.executeUpdate() > 0;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while updating car class.", e);
+        }
     }
 
     @Override
-    public boolean delete(Long id) throws SQLException {
+    public boolean delete(Long id) {
         String sql = "DELETE FROM car_class WHERE id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
-                return preparedStatement.executeUpdate() > 0;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setLong(1, id);
+                    return preparedStatement.executeUpdate() > 0;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while deleting car class.", e);
+        }
     }
 
-    private CarClass mapRowToCarClass(ResultSet resultSet) throws SQLException {
-        return new CarClass(
-                resultSet.getString("name"),
-                resultSet.getBigDecimal("base_price")
-        );
+    private CarClass mapRowToCarClass(ResultSet resultSet) {
+        try {
+            return new CarClass(
+                    resultSet.getString("name"),
+                    resultSet.getBigDecimal("base_price")
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping car class.", e);
+        }
     }
 }

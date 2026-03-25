@@ -1,17 +1,16 @@
 package ua.solvd.taxi.domain.dal;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 public interface DAO<K, T> {
-    T save(T entity) throws SQLException;
+    T save(T entity);
 
-    Optional<T> findById(K id) throws SQLException;
+    Optional<T> findById(K id);
 
-    List<T> findAll() throws SQLException;
+    List<T> findAll();
 
-    boolean update(K id, T entity) throws SQLException;
+    boolean update(K id, T entity);
 
-    boolean delete(K id) throws SQLException;
+    boolean delete(K id);
 }

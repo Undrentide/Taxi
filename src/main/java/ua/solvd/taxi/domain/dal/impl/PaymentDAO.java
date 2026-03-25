@@ -2,6 +2,7 @@ package ua.solvd.taxi.domain.dal.impl;
 
 import ua.solvd.taxi.domain.dal.AbstractDAO;
 import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
 import ua.solvd.taxi.domain.model.impl.Driver;
@@ -26,7 +27,7 @@ import java.util.Optional;
 public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
 
     @Override
-    public Payment save(Payment payment) throws SQLException {
+    public Payment save(Payment payment) {
         String findIdsSql = """
                  SELECT
                      orders.id AS target_order_id,
@@ -39,90 +40,110 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
                  INSERT INTO payment (order_id, amount, payment_type_id, paid_at)
                  VALUES (?, ?, ?, ?)
                 """;
-        return execute(connection -> {
-            long orderId, typeId;
-            try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
-                preparedStatement.setString(1, payment.getPaymentType().getName());
-                preparedStatement.setObject(2, payment.getOrder().getUuid());
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        orderId = resultSet.getLong("target_order_id");
-                        typeId = resultSet.getLong("target_type_id");
+        try {
+            return execute(connection -> {
+                long orderId, typeId;
+                try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
+                    preparedStatement.setString(1, payment.getPaymentType().getName());
+                    preparedStatement.setObject(2, payment.getOrder().getUuid());
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        if (resultSet.next()) {
+                            orderId = resultSet.getLong("target_order_id");
+                            typeId = resultSet.getLong("target_type_id");
 
-                        if (orderId == 0)
-                            throw new SQLException("Order not found for UUID: " + payment.getOrder().getUuid());
-                        if (typeId == 0)
-                            throw new SQLException("PaymentType not found: " + payment.getPaymentType().getName());
-                    } else {
-                        throw new SQLException("Failed to retrieve IDs: Order or PaymentType is missing.");
+                            if (orderId == 0)
+                                throw new SQLException("Order not found for UUID: " + payment.getOrder().getUuid());
+                            if (typeId == 0)
+                                throw new SQLException("PaymentType not found: " + payment.getPaymentType().getName());
+                        } else {
+                            throw new SQLException("Failed to retrieve IDs: Order or PaymentType is missing.");
+                        }
                     }
                 }
-            }
-            try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
-                preparedStatement.setLong(1, orderId);
-                preparedStatement.setBigDecimal(2, payment.getAmount());
-                preparedStatement.setLong(3, typeId);
-                preparedStatement.setTimestamp(4, Timestamp.from(payment.getPaidAt()));
-                preparedStatement.executeUpdate();
-                return payment;
-            }
-        });
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
+                    preparedStatement.setLong(1, orderId);
+                    preparedStatement.setBigDecimal(2, payment.getAmount());
+                    preparedStatement.setLong(3, typeId);
+                    preparedStatement.setTimestamp(4, Timestamp.from(payment.getPaidAt()));
+                    preparedStatement.executeUpdate();
+                    return payment;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while saving payment.", e);
+        }
     }
 
     @Override
-    public Optional<Payment> findById(Long id) throws SQLException {
+    public Optional<Payment> findById(Long id) {
         String sql = getBaseSelectQuery() + " WHERE pay.id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return Optional.of(mapRowToPayment(resultSet));
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setLong(1, id);
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        if (resultSet.next()) {
+                            return Optional.of(mapRowToPayment(resultSet));
+                        }
+                        return Optional.empty();
                     }
-                    return Optional.empty();
                 }
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while finding payment by id.", e);
+        }
     }
 
     @Override
-    public List<Payment> findAll() throws SQLException {
+    public List<Payment> findAll() {
         String sql = getBaseSelectQuery();
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    List<Payment> paymentList = new ArrayList<>();
-                    while (resultSet.next()) {
-                        paymentList.add(mapRowToPayment(resultSet));
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        List<Payment> paymentList = new ArrayList<>();
+                        while (resultSet.next()) {
+                            paymentList.add(mapRowToPayment(resultSet));
+                        }
+                        return paymentList;
                     }
-                    return paymentList;
                 }
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while finding all payments.", e);
+        }
     }
 
     @Override
-    public boolean update(Long id, Payment payment) throws SQLException {
+    public boolean update(Long id, Payment payment) {
         String sql = "UPDATE payment SET amount = ?, paid_at = ? WHERE id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setBigDecimal(1, payment.getAmount());
-                preparedStatement.setTimestamp(2, Timestamp.from(payment.getPaidAt()));
-                preparedStatement.setLong(3, id);
-                return preparedStatement.executeUpdate() > 0;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setBigDecimal(1, payment.getAmount());
+                    preparedStatement.setTimestamp(2, Timestamp.from(payment.getPaidAt()));
+                    preparedStatement.setLong(3, id);
+                    return preparedStatement.executeUpdate() > 0;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while updating payment.", e);
+        }
     }
 
     @Override
-    public boolean delete(Long id) throws SQLException {
+    public boolean delete(Long id) {
         String sql = "DELETE FROM payment WHERE id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
-                return preparedStatement.executeUpdate() > 0;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setLong(1, id);
+                    return preparedStatement.executeUpdate() > 0;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while deleting payment.", e);
+        }
     }
 
     private String getBaseSelectQuery() {
@@ -159,50 +180,88 @@ public class PaymentDAO extends AbstractDAO implements DAO<Long, Payment> {
                 """;
     }
 
-    private Payment mapRowToPayment(ResultSet resultSet) throws SQLException {
-        User client = new User(
-                resultSet.getString("client_fn"),
-                resultSet.getString("client_ln"),
-                resultSet.getString("client_ph"),
-                new Role(resultSet.getString("client_role_name"))
-        );
-        User driverUser = new User(
-                resultSet.getString("driver_fn"),
-                resultSet.getString("driver_ln"),
-                resultSet.getString("driver_ph"),
-                new Role(resultSet.getString("driver_role_name"))
-        );
-        Car car = new Car(
-                resultSet.getString("car_brand"),
-                resultSet.getString("car_model"),
-                resultSet.getString("car_plate"),
-                resultSet.getString("car_color"),
-                new CarClass(resultSet.getString("car_class_name"), resultSet.getBigDecimal("car_class_price"))
-        );
-        Driver driver = new Driver(
-                driverUser, car,
-                new DriverStatus(resultSet.getString("driver_status_name")),
-                resultSet.getBigDecimal("driver_rating")
-        );
-        PromoCode promo = null;
-        String promoCode = resultSet.getString("promo_code");
-        if (promoCode != null) {
-            promo = new PromoCode(promoCode, resultSet.getInt("promo_discount"), resultSet.getBoolean("promo_active"));
+    private Payment mapRowToPayment(ResultSet resultSet) {
+        User client;
+        try {
+            client = new User(
+                    resultSet.getString("client_fn"),
+                    resultSet.getString("client_ln"),
+                    resultSet.getString("client_ph"),
+                    new Role(resultSet.getString("client_role_name"))
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
         }
-        Order order = new Order(
-                client, driver,
-                new OrderStatus(resultSet.getString("order_status_name")),
-                promo,
-                new Region(resultSet.getString("region_name"), resultSet.getBigDecimal("region_multiplier")),
-                resultSet.getString("from_address"),
-                resultSet.getString("to_address"),
-                resultSet.getTimestamp("order_date").toInstant()
-        );
-        return new Payment(
-                order,
-                resultSet.getBigDecimal("payment_amount"),
-                new PaymentType(resultSet.getString("payment_type_name")),
-                resultSet.getTimestamp("payment_date").toInstant()
-        );
+        User driverUser;
+        try {
+            driverUser = new User(
+                    resultSet.getString("driver_fn"),
+                    resultSet.getString("driver_ln"),
+                    resultSet.getString("driver_ph"),
+                    new Role(resultSet.getString("driver_role_name"))
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
+        }
+        Car car;
+        try {
+            car = new Car(
+                    resultSet.getString("car_brand"),
+                    resultSet.getString("car_model"),
+                    resultSet.getString("car_plate"),
+                    resultSet.getString("car_color"),
+                    new CarClass(resultSet.getString("car_class_name"), resultSet.getBigDecimal("car_class_price"))
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
+        }
+        Driver driver;
+        try {
+            driver = new Driver(
+                    driverUser, car,
+                    new DriverStatus(resultSet.getString("driver_status_name")),
+                    resultSet.getBigDecimal("driver_rating")
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
+        }
+        PromoCode promo = null;
+        String promoCode;
+        try {
+            promoCode = resultSet.getString("promo_code");
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
+        }
+        if (promoCode != null) {
+            try {
+                promo = new PromoCode(promoCode, resultSet.getInt("promo_discount"), resultSet.getBoolean("promo_active"));
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while mapping payment.", e);
+            }
+        }
+        Order order;
+        try {
+            order = new Order(
+                    client, driver,
+                    new OrderStatus(resultSet.getString("order_status_name")),
+                    promo,
+                    new Region(resultSet.getString("region_name"), resultSet.getBigDecimal("region_multiplier")),
+                    resultSet.getString("from_address"),
+                    resultSet.getString("to_address"),
+                    resultSet.getTimestamp("order_date").toInstant()
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
+        }
+        try {
+            return new Payment(
+                    order,
+                    resultSet.getBigDecimal("payment_amount"),
+                    new PaymentType(resultSet.getString("payment_type_name")),
+                    resultSet.getTimestamp("payment_date").toInstant()
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping payment.", e);
+        }
     }
 }

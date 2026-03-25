@@ -6,5 +6,5 @@ import ua.solvd.taxi.domain.model.impl.Region;
 import ua.solvd.taxi.domain.model.impl.User;
 
 public interface OrderService {
-    void createOrder(User client, Driver driver, PromoCode promo, Region region, String from, String to);
+    void save(User client, Driver driver, PromoCode promo, Region region, String from, String to);
 }

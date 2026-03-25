@@ -11,6 +11,6 @@ public class OrderController {
     private final OrderService orderService = new OrderServiceImpl();
 
     public void createOrder(User client, Driver driver, PromoCode promo, Region region, String from, String to) {
-        orderService.createOrder(client, driver, promo, region, from, to);
+        orderService.save(client, driver, promo, region, from, to);
     }
 }

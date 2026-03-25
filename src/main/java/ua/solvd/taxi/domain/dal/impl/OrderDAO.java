@@ -2,6 +2,7 @@ package ua.solvd.taxi.domain.dal.impl;
 
 import ua.solvd.taxi.domain.dal.AbstractDAO;
 import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
 import ua.solvd.taxi.domain.model.impl.Driver;
@@ -25,7 +26,7 @@ import java.util.Optional;
 public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
 
     @Override
-    public Order save(Order order) throws SQLException {
+    public Order save(Order order) {
         String findIdsSql = """
                  SELECT
                      u.id AS client_id,\s
@@ -44,110 +45,130 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
                   INSERT INTO `order` (client_id, driver_id, status_id, promo_code_id, region_id, from_address, to_address, created_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
-        return execute(connection -> {
-            long clientId, driverId, statusId, regionId;
-            Long promoId = null;
+        try {
+            return execute(connection -> {
+                long clientId, driverId, statusId, regionId;
+                Long promoId = null;
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
-                preparedStatement.setString(1, order.getDriver().getUser().getPhone());
-                preparedStatement.setString(2, order.getOrderStatus().getName());
-                preparedStatement.setString(3, order.getRegion().getName());
-                if (order.getPromoCode() != null) {
-                    preparedStatement.setString(4, order.getPromoCode().getCode());
-                } else {
-                    preparedStatement.setNull(4, Types.VARCHAR);
-                }
-                preparedStatement.setString(5, order.getClient().getPhone());
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        clientId = resultSet.getLong("client_id");
-                        driverId = resultSet.getLong("driver_id");
-                        statusId = resultSet.getLong("status_id");
-                        regionId = resultSet.getLong("region_id");
-                        long id = resultSet.getLong("promo_id");
-                        if (!resultSet.wasNull()) {
-                            promoId = id;
-                        }
-                        if (clientId == 0 || driverId == 0 || statusId == 0 || regionId == 0) {
-                            throw new SQLException("Required related entities not found (Client, Driver, Status or Region)");
-                        }
+                try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
+                    preparedStatement.setString(1, order.getDriver().getUser().getPhone());
+                    preparedStatement.setString(2, order.getOrderStatus().getName());
+                    preparedStatement.setString(3, order.getRegion().getName());
+                    if (order.getPromoCode() != null) {
+                        preparedStatement.setString(4, order.getPromoCode().getCode());
                     } else {
-                        throw new SQLException("Order lookup failed: Client or Driver not found.");
+                        preparedStatement.setNull(4, Types.VARCHAR);
+                    }
+                    preparedStatement.setString(5, order.getClient().getPhone());
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        if (resultSet.next()) {
+                            clientId = resultSet.getLong("client_id");
+                            driverId = resultSet.getLong("driver_id");
+                            statusId = resultSet.getLong("status_id");
+                            regionId = resultSet.getLong("region_id");
+                            long id = resultSet.getLong("promo_id");
+                            if (!resultSet.wasNull()) {
+                                promoId = id;
+                            }
+                            if (clientId == 0 || driverId == 0 || statusId == 0 || regionId == 0) {
+                                throw new SQLException("Required related entities not found (Client, Driver, Status or Region)");
+                            }
+                        } else {
+                            throw new SQLException("Order lookup failed: Client or Driver not found.");
+                        }
                     }
                 }
-            }
-            try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
-                preparedStatement.setLong(1, clientId);
-                preparedStatement.setLong(2, driverId);
-                preparedStatement.setLong(3, statusId);
-                if (promoId != null) {
-                    preparedStatement.setLong(4, promoId);
-                } else {
-                    preparedStatement.setNull(4, Types.BIGINT);
+                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
+                    preparedStatement.setLong(1, clientId);
+                    preparedStatement.setLong(2, driverId);
+                    preparedStatement.setLong(3, statusId);
+                    if (promoId != null) {
+                        preparedStatement.setLong(4, promoId);
+                    } else {
+                        preparedStatement.setNull(4, Types.BIGINT);
+                    }
+                    preparedStatement.setLong(5, regionId);
+                    preparedStatement.setString(6, order.getFromAddress());
+                    preparedStatement.setString(7, order.getToAddress());
+                    preparedStatement.setTimestamp(8, Timestamp.from(order.getCreatedAt()));
+                    preparedStatement.executeUpdate();
+                    return order;
                 }
-                preparedStatement.setLong(5, regionId);
-                preparedStatement.setString(6, order.getFromAddress());
-                preparedStatement.setString(7, order.getToAddress());
-                preparedStatement.setTimestamp(8, Timestamp.from(order.getCreatedAt()));
-                preparedStatement.executeUpdate();
-                return order;
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while saving order.", e);
+        }
     }
 
     @Override
-    public Optional<Order> findById(Long id) throws SQLException {
+    public Optional<Order> findById(Long id) {
         String sql = getBaseSelectQuery() + " WHERE orders.id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return Optional.of(mapRowToOrder(resultSet));
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setLong(1, id);
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        if (resultSet.next()) {
+                            return Optional.of(mapRowToOrder(resultSet));
+                        }
+                        return Optional.empty();
                     }
-                    return Optional.empty();
                 }
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while finding order by id.", e);
+        }
     }
 
     @Override
-    public List<Order> findAll() throws SQLException {
+    public List<Order> findAll() {
         String sql = getBaseSelectQuery();
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    List<Order> orderList = new ArrayList<>();
-                    while (resultSet.next()) {
-                        orderList.add(mapRowToOrder(resultSet));
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                        List<Order> orderList = new ArrayList<>();
+                        while (resultSet.next()) {
+                            orderList.add(mapRowToOrder(resultSet));
+                        }
+                        return orderList;
                     }
-                    return orderList;
                 }
-            }
-        });
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while finding all orders.", e);
+        }
     }
 
     @Override
-    public boolean update(Long id, Order order) throws SQLException {
+    public boolean update(Long id, Order order) {
         String sql = "UPDATE `order` SET status_id = (SELECT id FROM order_status WHERE name = ?) WHERE id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, order.getOrderStatus().getName());
-                preparedStatement.setLong(2, id);
-                return preparedStatement.executeUpdate() > 0;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setString(1, order.getOrderStatus().getName());
+                    preparedStatement.setLong(2, id);
+                    return preparedStatement.executeUpdate() > 0;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while updating order.", e);
+        }
     }
 
     @Override
-    public boolean delete(Long id) throws SQLException {
+    public boolean delete(Long id) {
         String sql = "DELETE FROM `order` WHERE id = ?";
-        return execute(connection -> {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, id);
-                return preparedStatement.executeUpdate() > 0;
-            }
-        });
+        try {
+            return execute(connection -> {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setLong(1, id);
+                    return preparedStatement.executeUpdate() > 0;
+                }
+            });
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while deleting order.", e);
+        }
     }
 
     private String getBaseSelectQuery() {
@@ -180,62 +201,125 @@ public class OrderDAO extends AbstractDAO implements DAO<Long, Order> {
                 """;
     }
 
-    private Order mapRowToOrder(ResultSet resultSet) throws SQLException {
-        Role clientRole = new Role(resultSet.getString("client_role"));
-        User client = new User(
-                resultSet.getString("client_fn"),
-                resultSet.getString("client_ln"),
-                resultSet.getString("client_ph"),
-                clientRole
-        );
-        Role driverRole = new Role(resultSet.getString("drv_role"));
-        User driverUser = new User(
-                resultSet.getString("drv_fn"),
-                resultSet.getString("drv_ln"),
-                resultSet.getString("drv_ph"),
-                driverRole
-        );
-        CarClass carClass = new CarClass(
-                resultSet.getString("class_name"),
-                resultSet.getBigDecimal("class_price")
-        );
-        Car car = new Car(
-                resultSet.getString("brand"),
-                resultSet.getString("model"),
-                resultSet.getString("license_plate"),
-                resultSet.getString("color"),
-                carClass
-        );
-        DriverStatus driverStatus = new DriverStatus(resultSet.getString("drv_status_name"));
-        Driver driver = new Driver(
-                driverUser,
-                car,
-                driverStatus,
-                resultSet.getBigDecimal("driver_rating")
-        );
-        OrderStatus orderStatus = new OrderStatus(resultSet.getString("order_status_name"));
-        String promoCode = resultSet.getString("promo_code");
+    private Order mapRowToOrder(ResultSet resultSet) {
+        Role clientRole;
+        try {
+            clientRole = new Role(resultSet.getString("client_role"));
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        User client;
+        try {
+            client = new User(
+                    resultSet.getString("client_fn"),
+                    resultSet.getString("client_ln"),
+                    resultSet.getString("client_ph"),
+                    clientRole
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        Role driverRole;
+        try {
+            driverRole = new Role(resultSet.getString("drv_role"));
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        User driverUser;
+        try {
+            driverUser = new User(
+                    resultSet.getString("drv_fn"),
+                    resultSet.getString("drv_ln"),
+                    resultSet.getString("drv_ph"),
+                    driverRole
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        CarClass carClass;
+        try {
+            carClass = new CarClass(
+                    resultSet.getString("class_name"),
+                    resultSet.getBigDecimal("class_price")
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        Car car;
+        try {
+            car = new Car(
+                    resultSet.getString("brand"),
+                    resultSet.getString("model"),
+                    resultSet.getString("license_plate"),
+                    resultSet.getString("color"),
+                    carClass
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        DriverStatus driverStatus;
+        try {
+            driverStatus = new DriverStatus(resultSet.getString("drv_status_name"));
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        Driver driver;
+        try {
+            driver = new Driver(
+                    driverUser,
+                    car,
+                    driverStatus,
+                    resultSet.getBigDecimal("driver_rating")
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        OrderStatus orderStatus;
+        try {
+            orderStatus = new OrderStatus(resultSet.getString("order_status_name"));
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        String promoCode;
+        try {
+            promoCode = resultSet.getString("promo_code");
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
         PromoCode promo = null;
         if (promoCode != null) {
-            promo = new PromoCode(
-                    promoCode,
-                    resultSet.getInt("discount_percent"),
-                    resultSet.getBoolean("is_active")
-            );
+            try {
+                promo = new PromoCode(
+                        promoCode,
+                        resultSet.getInt("discount_percent"),
+                        resultSet.getBoolean("is_active")
+                );
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while mapping order.", e);
+            }
         }
-        Region region = new Region(
-                resultSet.getString("region_name"),
-                resultSet.getBigDecimal("region_multiplier")
-        );
-        return new Order(
-                client,
-                driver,
-                orderStatus,
-                promo,
-                region,
-                resultSet.getString("from_address"),
-                resultSet.getString("to_address"),
-                resultSet.getTimestamp("created_at").toInstant()
-        );
+        Region region;
+        try {
+            region = new Region(
+                    resultSet.getString("region_name"),
+                    resultSet.getBigDecimal("region_multiplier")
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
+        try {
+            return new Order(
+                    client,
+                    driver,
+                    orderStatus,
+                    promo,
+                    region,
+                    resultSet.getString("from_address"),
+                    resultSet.getString("to_address"),
+                    resultSet.getTimestamp("created_at").toInstant()
+            );
+        } catch (SQLException e) {
+            throw new PersistenceException("Error occurred while mapping order.", e);
+        }
     }
 }

@@ -13,7 +13,7 @@ public class CarController {
     private final CarService carService = new CarServiceImpl();
 
     public List<Car> findAllCars() {
-        List<Car> carList = carService.findAllCars();
+        List<Car> carList = carService.findAll();
         logger.info("Retrieved {} vehicles from the fleet.", carList.size());
         carList.forEach(car -> logger.debug("Vehicle: {} | {} {}.", car.getLicensePlate(), car.getBrand(), car.getModel()));
         return carList;
