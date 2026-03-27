@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class UserJacksonDAO implements UserDAO {
-    private static final String FILE_PATH = "src/main/resources/users.json";
+    private static final String FILE_PATH = "src/main/resources/user.json";
     private final ObjectMapper mapper;
 
     public UserJacksonDAO() {
@@ -66,7 +66,6 @@ public class UserJacksonDAO implements UserDAO {
         return loadData();
     }
 
-    @Override
     public Optional<User> findUserByPhone(String phone) {
         return loadData().stream()
                 .filter(user -> user.getPhone().equals(phone))

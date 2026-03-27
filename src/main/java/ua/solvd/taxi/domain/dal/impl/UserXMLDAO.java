@@ -85,7 +85,6 @@ public class UserXMLDAO implements UserDAO {
         }
     }
 
-    @Override
     public Optional<User> findUserByPhone(String phone) {
         try {
             NodeList nodeList = document.getElementsByTagName("user");

@@ -1,7 +1,6 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.domain.dal.UserDAO;
-import ua.solvd.taxi.util.DAOUtil;
+import ua.solvd.taxi.domain.dal.JDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
 import ua.solvd.taxi.domain.model.impl.User;
@@ -15,14 +14,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJDBCDAO implements UserDAO {
+public class UserJDBCDAO extends JDBCDAO<User> {
 
     @Override
     public User save(User user) {
         String findRoleIdSql = "SELECT id FROM role WHERE name = ?";
         String insertUserSql = "INSERT INTO user (id, first_name, last_name, phone, role_id) VALUES (?, ?, ?, ?, ?)";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 String roleId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findRoleIdSql)) {
                     preparedStatement.setString(1, user.getRole().getName());
@@ -54,7 +53,7 @@ public class UserJDBCDAO implements UserDAO {
     public Optional<User> findById(UUID id) {
         String sql = getBaseSelectQuery() + " WHERE users.id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -72,7 +71,7 @@ public class UserJDBCDAO implements UserDAO {
     @Override
     public List<User> findAll() {
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(getBaseSelectQuery())) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<User> userList = new ArrayList<>();
@@ -87,11 +86,10 @@ public class UserJDBCDAO implements UserDAO {
         }
     }
 
-    @Override
     public Optional<User> findUserByPhone(String phone) {
         String sql = getBaseSelectQuery() + " WHERE users.phone = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, phone);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -115,7 +113,7 @@ public class UserJDBCDAO implements UserDAO {
                  WHERE id = ?
                 """;
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 String roleId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findRoleIdSql)) {
                     preparedStatement.setString(1, user.getRole().getName());
@@ -143,7 +141,7 @@ public class UserJDBCDAO implements UserDAO {
     public boolean delete(UUID id) {
         String sql = "DELETE FROM user WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;

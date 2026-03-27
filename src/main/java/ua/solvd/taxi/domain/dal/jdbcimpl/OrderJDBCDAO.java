@@ -1,7 +1,6 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.util.DAOUtil;
-import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.dal.JDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -24,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class OrderDAO implements DAO<Order> {
+public class OrderJDBCDAO extends JDBCDAO<Order> {
 
     @Override
     public Order save(Order order) {
@@ -33,7 +32,7 @@ public class OrderDAO implements DAO<Order> {
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
                     preparedStatement.setString(1, order.getId().toString());
                     preparedStatement.setString(2, order.getClient().getId().toString());
@@ -61,7 +60,7 @@ public class OrderDAO implements DAO<Order> {
     public Optional<Order> findById(UUID id) {
         String sql = getBaseSelectQuery() + " WHERE orders.id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -81,7 +80,7 @@ public class OrderDAO implements DAO<Order> {
     public List<Order> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         List<Order> orderList = new ArrayList<>();
@@ -101,7 +100,7 @@ public class OrderDAO implements DAO<Order> {
     public boolean update(Order order) {
         String sql = "UPDATE `order` SET status_id = ? WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, order.getOrderStatus().getId().toString());
                     preparedStatement.setString(2, order.getId().toString());
@@ -117,7 +116,7 @@ public class OrderDAO implements DAO<Order> {
     public boolean delete(UUID id) {
         String sql = "DELETE FROM `order` WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;

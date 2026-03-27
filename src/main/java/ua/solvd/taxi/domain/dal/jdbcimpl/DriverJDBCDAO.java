@@ -1,7 +1,6 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.util.DAOUtil;
-import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.dal.JDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class DriverDAO implements DAO<Driver> {
+public class DriverJDBCDAO extends JDBCDAO<Driver> {
 
     @Override
     public Driver save(Driver driver) {
@@ -27,7 +26,7 @@ public class DriverDAO implements DAO<Driver> {
                  VALUES (?, ?, ?, ?, ?)
                 """;
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertDriverSql)) {
                     preparedStatement.setString(1, driver.getId().toString());
                     preparedStatement.setString(2, driver.getUser().getId().toString());
@@ -47,7 +46,7 @@ public class DriverDAO implements DAO<Driver> {
     public Optional<Driver> findById(UUID id) {
         String sql = getBaseSelectQuery() + " WHERE drivers.id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -66,7 +65,7 @@ public class DriverDAO implements DAO<Driver> {
     public List<Driver> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<Driver> driverList = new ArrayList<>();
@@ -84,7 +83,7 @@ public class DriverDAO implements DAO<Driver> {
     public Optional<Driver> findAvailableDriver() {
         String sql = getBaseSelectQuery() + " WHERE statuses.name = 'Available' LIMIT 1";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     if (resultSet.next()) {
@@ -102,7 +101,7 @@ public class DriverDAO implements DAO<Driver> {
     public boolean update(Driver driver) {
         String updateSql = "UPDATE driver SET status_id = ?, rating = ? WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(updateSql)) {
                     preparedStatement.setString(1, driver.getDriverStatus().getId().toString());
                     preparedStatement.setBigDecimal(2, driver.getRating());
@@ -123,7 +122,7 @@ public class DriverDAO implements DAO<Driver> {
                 WHERE u.phone = ?
                 """;
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, statusName);
                     preparedStatement.setString(2, phone);
@@ -139,7 +138,7 @@ public class DriverDAO implements DAO<Driver> {
     public boolean delete(UUID id) {
         String sql = "DELETE FROM driver WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;

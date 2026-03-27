@@ -7,13 +7,12 @@ import ua.solvd.taxi.api.DriverController;
 import ua.solvd.taxi.api.OrderController;
 import ua.solvd.taxi.api.PromoCodeController;
 import ua.solvd.taxi.api.UserController;
-import ua.solvd.taxi.domain.dal.UserDAO;
-import ua.solvd.taxi.domain.dal.impl.CarDAO;
-import ua.solvd.taxi.domain.dal.impl.DriverDAO;
-import ua.solvd.taxi.domain.dal.impl.OrderDAO;
-import ua.solvd.taxi.domain.dal.impl.OrderStatusDAO;
-import ua.solvd.taxi.domain.dal.impl.PromoCodeDAO;
-import ua.solvd.taxi.domain.dal.impl.UserJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.CarJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.OrderJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.OrderStatusJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.PromoCodeJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.UserJDBCDAO;
 import ua.solvd.taxi.domain.dal.impl.UserJacksonDAO;
 import ua.solvd.taxi.domain.dal.impl.UserJaxbDAO;
 import ua.solvd.taxi.domain.dal.impl.UserXMLDAO;
@@ -27,11 +26,12 @@ import ua.solvd.taxi.domain.service.DriverService;
 import ua.solvd.taxi.domain.service.OrderService;
 import ua.solvd.taxi.domain.service.PromoCodeService;
 import ua.solvd.taxi.domain.service.UserService;
-import ua.solvd.taxi.domain.service.impl.CarServiceImpl;
-import ua.solvd.taxi.domain.service.impl.DriverServiceImpl;
-import ua.solvd.taxi.domain.service.impl.OrderServiceImpl;
-import ua.solvd.taxi.domain.service.impl.UserServiceImpl;
-import ua.solvd.taxi.domain.service.impl.PromoCodeCodeServiceImpl;
+import ua.solvd.taxi.domain.service.jdbcimpl.UserServiceJDBCImpl;
+import ua.solvd.taxi.domain.service.otherimpl.UserServiceOtherImpl;
+import ua.solvd.taxi.domain.service.jdbcimpl.CarServiceJDBCImpl;
+import ua.solvd.taxi.domain.service.jdbcimpl.DriverServiceJDBCImpl;
+import ua.solvd.taxi.domain.service.jdbcimpl.OrderServiceJDBCImpl;
+import ua.solvd.taxi.domain.service.jdbcimpl.PromoCodeCodeServiceJDBCImpl;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
@@ -39,23 +39,23 @@ import java.util.Scanner;
 public class EntryPoint {
     private static final Logger logger = LogManager.getLogger(EntryPoint.class);
     private static final Scanner scanner = new Scanner(System.in);
-    private static final UserDAO userJDBCDAO = new UserJDBCDAO();
-    private static final UserDAO userXMLDAO = new UserXMLDAO();
-    private static final UserDAO userJaxbDAO = new UserJaxbDAO();
-    private static final UserDAO userJacksonDAO = new UserJacksonDAO();
-    private static final CarDAO carDAO = new CarDAO();
-    private static final DriverDAO driverDAO = new DriverDAO();
-    private static final OrderDAO orderDAO = new OrderDAO();
-    private static final PromoCodeDAO promoDAO = new PromoCodeDAO();
-    private static final OrderStatusDAO orderStatusDAO = new OrderStatusDAO();
-    /*private static final UserService userService = new UserServiceImpl(userJDBCDAO);*/
-    /*private static final UserService userService = new UserServiceImpl(userXMLDAO);*/
-    /*private static final UserService userService = new UserServiceImpl(userJaxbDAO);*/
-    private static final UserService userService = new UserServiceImpl(userJacksonDAO);
-    private static final CarService carService = new CarServiceImpl(carDAO);
-    private static final DriverService driverService = new DriverServiceImpl(driverDAO);
-    private static final OrderService orderService = new OrderServiceImpl(orderDAO, orderStatusDAO, driverDAO);
-    private static final PromoCodeService promoService = new PromoCodeCodeServiceImpl(promoDAO);
+    private static final UserJDBCDAO userJDBCDAO = new UserJDBCDAO();
+    private static final UserXMLDAO userXMLDAO = new UserXMLDAO();
+    private static final UserJaxbDAO userJaxbDAO = new UserJaxbDAO();
+    private static final UserJacksonDAO userJacksonDAO = new UserJacksonDAO();
+    private static final CarJDBCDAO carJDBCDAO = new CarJDBCDAO();
+    private static final DriverJDBCDAO driverJDBCDAO = new DriverJDBCDAO();
+    private static final OrderJDBCDAO orderJDBCDAO = new OrderJDBCDAO();
+    private static final PromoCodeJDBCDAO promoDAO = new PromoCodeJDBCDAO();
+    private static final OrderStatusJDBCDAO orderStatusJDBCDAO = new OrderStatusJDBCDAO();
+    /*private static final UserService userService = new UserServiceJDBCImpl(userJDBCDAO);*/
+    /*private static final UserService userService = new UserServiceOtherImpl(userXMLDAO);*/
+    /*private static final UserService userService = new UserServiceOtherImpl(userJaxbDAO);*/
+    private static final UserService userService = new UserServiceOtherImpl(userJacksonDAO);
+    private static final CarService carService = new CarServiceJDBCImpl(carJDBCDAO);
+    private static final DriverService driverService = new DriverServiceJDBCImpl(driverJDBCDAO);
+    private static final OrderService orderService = new OrderServiceJDBCImpl(orderJDBCDAO, orderStatusJDBCDAO, driverJDBCDAO);
+    private static final PromoCodeService promoService = new PromoCodeCodeServiceJDBCImpl(promoDAO);
     private static final UserController userController = new UserController(userService);
     private static final CarController carController = new CarController(carService);
     private static final DriverController driverController = new DriverController(driverService);

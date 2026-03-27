@@ -1,7 +1,6 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.util.DAOUtil;
-import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.dal.JDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -23,13 +22,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ReviewDAO implements DAO<Review> {
+public class ReviewJDBCDAO extends JDBCDAO<Review> {
 
     @Override
     public Review save(Review review) {
         String insertSql = "INSERT INTO review (id, order_id, rating, comment) VALUES (?, ?, ?, ?)";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
                     preparedStatement.setString(1, review.getId().toString());
                     preparedStatement.setString(2, review.getOrder().getId().toString());
@@ -48,7 +47,7 @@ public class ReviewDAO implements DAO<Review> {
     public Optional<Review> findById(UUID id) {
         String sql = getBaseSelectQuery() + " WHERE reviews.id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -67,7 +66,7 @@ public class ReviewDAO implements DAO<Review> {
     public List<Review> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<Review> reviewList = new ArrayList<>();
@@ -86,7 +85,7 @@ public class ReviewDAO implements DAO<Review> {
     public boolean update(Review review) {
         String sql = "UPDATE review SET rating = ?, comment = ? WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setInt(1, review.getRating());
                     preparedStatement.setString(2, review.getComment());
@@ -103,7 +102,7 @@ public class ReviewDAO implements DAO<Review> {
     public boolean delete(UUID id) {
         String sql = "DELETE FROM review WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;

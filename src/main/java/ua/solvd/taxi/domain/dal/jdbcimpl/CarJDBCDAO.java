@@ -1,7 +1,6 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.util.DAOUtil;
-import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.dal.JDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -14,14 +13,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class CarDAO implements DAO<Car> {
+public class CarJDBCDAO extends JDBCDAO<Car> {
 
     @Override
     public Car save(Car car) {
         String findClassIdSql = "SELECT id FROM car_class WHERE name = ?";
         String insertCarSql = "INSERT INTO car (id, brand, model, license_plate, color, class_id) VALUES (?, ?, ?, ?, ?, ?)";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 String classId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findClassIdSql)) {
                     preparedStatement.setString(1, car.getCarClass().getName());
@@ -51,7 +50,7 @@ public class CarDAO implements DAO<Car> {
     public Optional<Car> findById(UUID id) {
         String sql = getBaseSelectQuery() + " WHERE cars.id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -70,7 +69,7 @@ public class CarDAO implements DAO<Car> {
     public List<Car> findAll() {
         String sql = getBaseSelectQuery();
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<Car> carList = new ArrayList<>();
@@ -94,7 +93,7 @@ public class CarDAO implements DAO<Car> {
                  WHERE id = ?
                 """;
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 String classId;
                 try (PreparedStatement classStmt = connection.prepareStatement(findClassIdSql)) {
                     classStmt.setString(1, car.getCarClass().getName());
@@ -121,7 +120,7 @@ public class CarDAO implements DAO<Car> {
     public boolean delete(UUID id) {
         String sql = "DELETE FROM car WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;

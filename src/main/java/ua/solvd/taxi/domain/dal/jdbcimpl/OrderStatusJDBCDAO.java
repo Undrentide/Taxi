@@ -1,7 +1,6 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.util.DAOUtil;
-import ua.solvd.taxi.domain.dal.DAO;
+import ua.solvd.taxi.domain.dal.JDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.OrderStatus;
 
@@ -13,13 +12,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class OrderStatusDAO implements DAO<OrderStatus> {
+public class OrderStatusJDBCDAO extends JDBCDAO<OrderStatus> {
 
     @Override
     public OrderStatus save(OrderStatus orderStatus) {
         String sql = "INSERT INTO order_status (id, name) VALUES (?, ?)";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, orderStatus.getId().toString());
                     preparedStatement.setString(2, orderStatus.getName());
@@ -36,7 +35,7 @@ public class OrderStatusDAO implements DAO<OrderStatus> {
     public Optional<OrderStatus> findById(UUID id) {
         String sql = "SELECT status.id, status.name FROM order_status AS status WHERE status.id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -55,7 +54,7 @@ public class OrderStatusDAO implements DAO<OrderStatus> {
     public List<OrderStatus> findAll() {
         String sql = "SELECT status.id, status.name FROM order_status AS status";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     List<OrderStatus> orderStatusList = new ArrayList<>();
@@ -73,7 +72,7 @@ public class OrderStatusDAO implements DAO<OrderStatus> {
     public Optional<OrderStatus> findByName(String name) {
         String sql = "SELECT status.id, status.name FROM order_status AS status WHERE status.name = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, name);
                     ResultSet resultSet = preparedStatement.executeQuery();
@@ -92,7 +91,7 @@ public class OrderStatusDAO implements DAO<OrderStatus> {
     public boolean update(OrderStatus orderStatus) {
         String sql = "UPDATE order_status SET name = ? WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, orderStatus.getName());
                     preparedStatement.setString(2, orderStatus.getId().toString());
@@ -108,7 +107,7 @@ public class OrderStatusDAO implements DAO<OrderStatus> {
     public boolean delete(UUID id) {
         String sql = "DELETE FROM order_status WHERE id = ?";
         try {
-            return DAOUtil.execute(connection -> {
+            return execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;

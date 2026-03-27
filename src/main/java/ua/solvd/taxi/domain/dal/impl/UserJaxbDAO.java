@@ -65,7 +65,6 @@ public class UserJaxbDAO implements UserDAO {
         return user;
     }
 
-    @Override
     public Optional<User> findUserByPhone(String phone) {
         return loadData().getUserList().stream()
                 .filter(user -> user.getPhone().equals(phone))

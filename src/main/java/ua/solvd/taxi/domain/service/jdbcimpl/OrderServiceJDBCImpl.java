@@ -1,10 +1,10 @@
-package ua.solvd.taxi.domain.service.impl;
+package ua.solvd.taxi.domain.service.jdbcimpl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.domain.dal.impl.DriverDAO;
-import ua.solvd.taxi.domain.dal.impl.OrderDAO;
-import ua.solvd.taxi.domain.dal.impl.OrderStatusDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.OrderJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.OrderStatusJDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.model.impl.Order;
@@ -16,16 +16,16 @@ import ua.solvd.taxi.domain.service.OrderService;
 
 import java.time.Instant;
 
-public class OrderServiceImpl implements OrderService {
-    private static final Logger logger = LogManager.getLogger(OrderServiceImpl.class);
-    private final OrderDAO orderDAO;
-    private final OrderStatusDAO orderStatusDAO;
-    private final DriverDAO driverDAO;
+public class OrderServiceJDBCImpl implements OrderService {
+    private static final Logger logger = LogManager.getLogger(OrderServiceJDBCImpl.class);
+    private final OrderJDBCDAO orderJDBCDAO;
+    private final OrderStatusJDBCDAO orderStatusJDBCDAO;
+    private final DriverJDBCDAO driverJDBCDAO;
 
-    public OrderServiceImpl(OrderDAO orderDAO, OrderStatusDAO orderStatusDAO, DriverDAO driverDAO) {
-        this.orderDAO = orderDAO;
-        this.orderStatusDAO = orderStatusDAO;
-        this.driverDAO = driverDAO;
+    public OrderServiceJDBCImpl(OrderJDBCDAO orderJDBCDAO, OrderStatusJDBCDAO orderStatusJDBCDAO, DriverJDBCDAO driverJDBCDAO) {
+        this.orderJDBCDAO = orderJDBCDAO;
+        this.orderStatusJDBCDAO = orderStatusJDBCDAO;
+        this.driverJDBCDAO = driverJDBCDAO;
     }
 
     @Override
@@ -33,12 +33,12 @@ public class OrderServiceImpl implements OrderService {
         if (!"available".equalsIgnoreCase(driver.getDriverStatus().getName())) {
             throw new PersistenceException("The selected driver is currently busy or offline.");
         }
-        OrderStatus inProgressStatus = orderStatusDAO.findByName("in_progress")
+        OrderStatus inProgressStatus = orderStatusJDBCDAO.findByName("in_progress")
                 .orElseThrow(() -> new PersistenceException("Status 'in_progress' not found."));
         Order order = new Order(client, driver, inProgressStatus, promo, region, from, to, Instant.now());
-        orderDAO.save(order);
+        orderJDBCDAO.save(order);
         String driverPhone = driver.getUser().getPhone();
-        if (!driverDAO.updateStatusByPhone(driverPhone, "busy")) {
+        if (!driverJDBCDAO.updateStatusByPhone(driverPhone, "busy")) {
             throw new PersistenceException("Failed to transition driver to 'busy' status.");
         }
         logger.info("Order created and driver {} is now busy.", driverPhone);

@@ -1,29 +1,29 @@
-package ua.solvd.taxi.domain.service.impl;
+package ua.solvd.taxi.domain.service.jdbcimpl;
 
-import ua.solvd.taxi.domain.dal.impl.DriverDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJDBCDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.service.DriverService;
 
 import java.util.List;
 
-public class DriverServiceImpl implements DriverService {
-    private final DriverDAO driverDAO;
+public class DriverServiceJDBCImpl implements DriverService {
+    private final DriverJDBCDAO driverJDBCDAO;
 
-    public DriverServiceImpl(DriverDAO driverDAO) {
-        this.driverDAO = driverDAO;
+    public DriverServiceJDBCImpl(DriverJDBCDAO driverJDBCDAO) {
+        this.driverJDBCDAO = driverJDBCDAO;
     }
 
     @Override
     public List<Driver> findAvailableDrivers() {
-        return driverDAO.findAll().stream()
+        return driverJDBCDAO.findAll().stream()
                 .filter(d -> "Available".equalsIgnoreCase(d.getDriverStatus().getName()))
                 .toList();
     }
 
     @Override
     public Driver getAvailableDriver() {
-        return driverDAO.findAvailableDriver()
+        return driverJDBCDAO.findAvailableDriver()
                 .orElseThrow(() -> new PersistenceException("No available drivers found at the moment."));
     }
 }
