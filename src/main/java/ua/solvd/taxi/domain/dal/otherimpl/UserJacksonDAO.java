@@ -1,10 +1,10 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.otherimpl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import ua.solvd.taxi.domain.dal.UserDAO;
+import ua.solvd.taxi.domain.dal.UserOtherDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJacksonDAO implements UserDAO {
+public class UserJacksonDAO implements UserOtherDAO {
     private static final String FILE_PATH = "src/main/resources/user.json";
     private final ObjectMapper mapper;
 
