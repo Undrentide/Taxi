@@ -1,4 +1,4 @@
-package ua.solvd.taxi.domain.dal.otherimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
