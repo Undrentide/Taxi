@@ -1,4 +1,4 @@
-package ua.solvd.taxi.domain.dal.impl;
+package ua.solvd.taxi.domain.dal.otherimpl;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
