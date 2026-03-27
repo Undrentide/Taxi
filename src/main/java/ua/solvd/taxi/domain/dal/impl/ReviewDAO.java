@@ -21,30 +21,20 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public class ReviewDAO implements DAO<Long, Review> {
+public class ReviewDAO implements DAO<Review> {
 
     @Override
     public Review save(Review review) {
-        String findOrderIdSql = "SELECT ord.id AS target_order_id FROM `order` AS ord WHERE ord.id = ?";
-        String insertSql = "INSERT INTO review (order_id, rating, comment) VALUES (?, ?, ?)";
+        String insertSql = "INSERT INTO review (id, order_id, rating, comment) VALUES (?, ?, ?, ?)";
         try {
             return DAOUtil.execute(connection -> {
-                long orderId;
-                try (PreparedStatement preparedStatement = connection.prepareStatement(findOrderIdSql)) {
-                    preparedStatement.setObject(1, review.getOrder().getUuid());
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            orderId = resultSet.getLong("target_order_id");
-                        } else {
-                            throw new SQLException("Review failed: Order with UUID " + review.getOrder().getUuid() + " not found.");
-                        }
-                    }
-                }
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
-                    preparedStatement.setLong(1, orderId);
-                    preparedStatement.setInt(2, review.getRating());
-                    preparedStatement.setString(3, review.getComment());
+                    preparedStatement.setString(1, review.getId().toString());
+                    preparedStatement.setString(2, review.getOrder().getId().toString());
+                    preparedStatement.setInt(3, review.getRating());
+                    preparedStatement.setString(4, review.getComment());
                     preparedStatement.executeUpdate();
                     return review;
                 }
@@ -55,18 +45,17 @@ public class ReviewDAO implements DAO<Long, Review> {
     }
 
     @Override
-    public Optional<Review> findById(Long id) {
+    public Optional<Review> findById(UUID id) {
         String sql = getBaseSelectQuery() + " WHERE reviews.id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            return Optional.of(mapRowToReview(resultSet));
-                        }
-                        return Optional.empty();
+                    preparedStatement.setString(1, id.toString());
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    if (resultSet.next()) {
+                        return Optional.of(mapRowToReview(resultSet));
                     }
+                    return Optional.empty();
                 }
             });
         } catch (SQLException e) {
@@ -80,13 +69,12 @@ public class ReviewDAO implements DAO<Long, Review> {
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        List<Review> reviewList = new ArrayList<>();
-                        while (resultSet.next()) {
-                            reviewList.add(mapRowToReview(resultSet));
-                        }
-                        return reviewList;
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    List<Review> reviewList = new ArrayList<>();
+                    while (resultSet.next()) {
+                        reviewList.add(mapRowToReview(resultSet));
                     }
+                    return reviewList;
                 }
             });
         } catch (SQLException e) {
@@ -95,14 +83,14 @@ public class ReviewDAO implements DAO<Long, Review> {
     }
 
     @Override
-    public boolean update(Long id, Review review) {
+    public boolean update(Review review) {
         String sql = "UPDATE review SET rating = ?, comment = ? WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setInt(1, review.getRating());
                     preparedStatement.setString(2, review.getComment());
-                    preparedStatement.setLong(3, id);
+                    preparedStatement.setString(3, review.getId().toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -112,12 +100,12 @@ public class ReviewDAO implements DAO<Long, Review> {
     }
 
     @Override
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         String sql = "DELETE FROM review WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -129,19 +117,19 @@ public class ReviewDAO implements DAO<Long, Review> {
     private String getBaseSelectQuery() {
         return """
                   SELECT
-                      reviews.rating AS review_rating, reviews.comment AS review_comment,
-                      orders.from_address, orders.to_address, orders.created_at AS order_date,
-                      clients.first_name AS client_fn, clients.last_name AS client_ln, clients.phone AS client_ph,
-                      client_roles.name AS client_role,
-                      drivers.rating AS drv_rating,
-                      drv_users.first_name AS drv_fn, drv_users.last_name AS drv_ln, drv_users.phone AS drv_ph,
-                      drv_roles.name AS drv_role,
-                      cars.brand, cars.model, cars.license_plate, cars.color,
-                      classes.name AS class_name, classes.base_price AS class_price,
-                      drv_statuses.name AS drv_status_name,
-                      ord_statuses.name AS order_status_name,
-                      promos.code AS promo_code, promos.discount_percent, promos.is_active,
-                      regions.name AS region_name, regions.multiplier AS region_multiplier
+                      reviews.id AS review_id, reviews.rating AS review_rating, reviews.comment AS review_comment,
+                      orders.id AS order_id, orders.from_address, orders.to_address, orders.created_at AS order_date,
+                      clients.id AS client_id, clients.first_name AS client_fn, clients.last_name AS client_ln, clients.phone AS client_ph,
+                      client_roles.id AS client_role_id, client_roles.name AS client_role,
+                      drivers.id AS driver_id, drivers.rating AS drv_rating,
+                      drv_users.id AS drv_user_id, drv_users.first_name AS drv_fn, drv_users.last_name AS drv_ln, drv_users.phone AS drv_ph,
+                      drv_roles.id AS drv_role_id, drv_roles.name AS drv_role,
+                      cars.id AS car_id, cars.brand, cars.model, cars.license_plate, cars.color,
+                      classes.id AS class_id, classes.name AS class_name, classes.base_price AS class_price,
+                      drv_statuses.id AS drv_status_id, drv_statuses.name AS drv_status_name,
+                      ord_statuses.id AS order_status_id, ord_statuses.name AS order_status_name,
+                      promos.id AS promo_id, promos.code AS promo_code, promos.discount_percent, promos.is_active,
+                      regions.id AS region_id, regions.name AS region_name, regions.multiplier AS region_multiplier
                   FROM review AS reviews
                   INNER JOIN `order` AS orders ON reviews.order_id = orders.id
                   INNER JOIN user AS clients ON orders.client_id = clients.id
@@ -158,86 +146,87 @@ public class ReviewDAO implements DAO<Long, Review> {
                 """;
     }
 
-    private Review mapRowToReview(ResultSet resultSet) {
-        User client;
-        try {
-            client = new User(
-                    resultSet.getString("client_fn"),
-                    resultSet.getString("client_ln"),
-                    resultSet.getString("client_ph"),
-                    new Role(resultSet.getString("client_role"))
+    private Review mapRowToReview(ResultSet resultSet) throws SQLException {
+        Role clientRole = new Role(
+                UUID.fromString(resultSet.getString("client_role_id")),
+                resultSet.getString("client_role")
+        );
+        User client = new User(
+                UUID.fromString(resultSet.getString("client_id")),
+                resultSet.getString("client_fn"),
+                resultSet.getString("client_ln"),
+                resultSet.getString("client_ph"),
+                clientRole
+        );
+        Role drvRole = new Role(
+                UUID.fromString(resultSet.getString("drv_role_id")),
+                resultSet.getString("drv_role")
+        );
+        User driverUser = new User(
+                UUID.fromString(resultSet.getString("drv_user_id")),
+                resultSet.getString("drv_fn"),
+                resultSet.getString("drv_ln"),
+                resultSet.getString("drv_ph"),
+                drvRole
+        );
+        CarClass carClass = new CarClass(
+                UUID.fromString(resultSet.getString("class_id")),
+                resultSet.getString("class_name"),
+                resultSet.getBigDecimal("class_price")
+        );
+        Car car = new Car(
+                UUID.fromString(resultSet.getString("car_id")),
+                resultSet.getString("brand"),
+                resultSet.getString("model"),
+                resultSet.getString("license_plate"),
+                resultSet.getString("color"),
+                carClass
+        );
+        DriverStatus driverStatus = new DriverStatus(
+                UUID.fromString(resultSet.getString("drv_status_id")),
+                resultSet.getString("drv_status_name")
+        );
+        Driver driver = new Driver(
+                UUID.fromString(resultSet.getString("driver_id")),
+                driverUser,
+                car,
+                driverStatus,
+                resultSet.getBigDecimal("drv_rating")
+        );
+        OrderStatus orderStatus = new OrderStatus(
+                UUID.fromString(resultSet.getString("order_status_id")),
+                resultSet.getString("order_status_name")
+        );
+        PromoCode promoCode = null;
+        if (resultSet.getString("promo_id") != null) {
+            promoCode = new PromoCode(
+                    UUID.fromString(resultSet.getString("promo_id")),
+                    resultSet.getString("promo_code"),
+                    resultSet.getInt("discount_percent"),
+                    resultSet.getBoolean("is_active")
             );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
         }
-        User driverUser;
-        try {
-            driverUser = new User(
-                    resultSet.getString("drv_fn"),
-                    resultSet.getString("drv_ln"),
-                    resultSet.getString("drv_ph"),
-                    new Role(resultSet.getString("drv_role"))
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
-        CarClass carClass;
-        try {
-            carClass = new CarClass(resultSet.getString("class_name"), resultSet.getBigDecimal("class_price"));
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
-        Car car;
-        try {
-            car = new Car(resultSet.getString("brand"), resultSet.getString("model"),
-                    resultSet.getString("license_plate"), resultSet.getString("color"), carClass);
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
-        Driver driver;
-        try {
-            driver = new Driver(driverUser, car, new DriverStatus(resultSet.getString("drv_status_name")),
-                    resultSet.getBigDecimal("drv_rating"));
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
-        PromoCode promo = null;
-        String promoCode;
-        try {
-            promoCode = resultSet.getString("promo_code");
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
-        if (promoCode != null) {
-            try {
-                promo = new PromoCode(promoCode, resultSet.getInt("discount_percent"), resultSet.getBoolean("is_active"));
-            } catch (SQLException e) {
-                throw new PersistenceException("Error occurred while mapping review.", e);
-            }
-        }
-        Order order;
-        try {
-            order = new Order(
-                    client,
-                    driver,
-                    new OrderStatus(resultSet.getString("order_status_name")),
-                    promo,
-                    new Region(resultSet.getString("region_name"), resultSet.getBigDecimal("region_multiplier")),
-                    resultSet.getString("from_address"),
-                    resultSet.getString("to_address"),
-                    resultSet.getTimestamp("order_date").toInstant()
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
-        try {
-            return new Review(
-                    order,
-                    resultSet.getInt("review_rating"),
-                    resultSet.getString("review_comment")
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping review.", e);
-        }
+        Region region = new Region(
+                UUID.fromString(resultSet.getString("region_id")),
+                resultSet.getString("region_name"),
+                resultSet.getBigDecimal("region_multiplier")
+        );
+        Order order = new Order(
+                UUID.fromString(resultSet.getString("order_id")),
+                client,
+                driver,
+                orderStatus,
+                promoCode,
+                region,
+                resultSet.getString("from_address"),
+                resultSet.getString("to_address"),
+                resultSet.getTimestamp("order_date").toInstant()
+        );
+        return new Review(
+                UUID.fromString(resultSet.getString("review_id")),
+                order,
+                resultSet.getInt("review_rating"),
+                resultSet.getString("review_comment")
+        );
     }
 }

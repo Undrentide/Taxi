@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserXMLDAO implements UserDAO<UUID> {
+public class UserXMLDAO implements UserDAO {
     private static final String FILE_PATH = "src/main/resources/user.xml";
     private final Document document;
 
@@ -36,13 +36,16 @@ public class UserXMLDAO implements UserDAO<UUID> {
     public User save(User user) {
         try {
             Element root = document.getDocumentElement();
-            Element element = document.createElement("user");
-            element.appendChild(createNode(document, "uuid", user.getUuid().toString()));
-            element.appendChild(createNode(document, "first_name", user.getFirstName()));
-            element.appendChild(createNode(document, "last_name", user.getLastName()));
-            element.appendChild(createNode(document, "phone", user.getPhone()));
-            element.appendChild(createNode(document, "role_name", user.getRole().getName()));
-            root.appendChild(element);
+            Element userElement = document.createElement("user");
+            userElement.appendChild(createNode(document, "id", user.getId().toString()));
+            userElement.appendChild(createNode(document, "first_name", user.getFirstName()));
+            userElement.appendChild(createNode(document, "last_name", user.getLastName()));
+            userElement.appendChild(createNode(document, "phone", user.getPhone()));
+            Element roleElement = document.createElement("role");
+            roleElement.appendChild(createNode(document, "id", user.getRole().getId().toString()));
+            roleElement.appendChild(createNode(document, "name", user.getRole().getName()));
+            userElement.appendChild(roleElement);
+            root.appendChild(userElement);
             saveToFile(document);
             return user;
         } catch (Exception e) {
@@ -54,11 +57,11 @@ public class UserXMLDAO implements UserDAO<UUID> {
     public Optional<User> findById(UUID id) {
         try {
             NodeList nodeList = document.getElementsByTagName("user");
-            String targetUuid = id.toString();
+            String targetId = id.toString();
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Element element = (Element) nodeList.item(i);
-                String xmlUuid = element.getElementsByTagName("uuid").item(0).getTextContent();
-                if (xmlUuid.equals(targetUuid)) {
+                String xmlId = element.getElementsByTagName("id").item(0).getTextContent();
+                if (xmlId.equals(targetId)) {
                     return Optional.of(mapNodeToUser(element));
                 }
             }
@@ -99,24 +102,27 @@ public class UserXMLDAO implements UserDAO<UUID> {
     }
 
     @Override
-    public boolean update(UUID id, User user) {
+    public boolean update(User user) {
         try {
             NodeList nodeList = document.getElementsByTagName("user");
-            String targetUuid = user.getUuid().toString();
+            String targetId = user.getId().toString();
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Element element = (Element) nodeList.item(i);
-                if (element.getElementsByTagName("uuid").item(0).getTextContent().equals(targetUuid)) {
+                String xmlId = element.getElementsByTagName("id").item(0).getTextContent();
+                if (xmlId.equals(targetId)) {
                     element.getElementsByTagName("first_name").item(0).setTextContent(user.getFirstName());
                     element.getElementsByTagName("last_name").item(0).setTextContent(user.getLastName());
                     element.getElementsByTagName("phone").item(0).setTextContent(user.getPhone());
-                    element.getElementsByTagName("role_name").item(0).setTextContent(user.getRole().getName());
+                    Element roleElement = (Element) element.getElementsByTagName("role").item(0);
+                    roleElement.getElementsByTagName("id").item(0).setTextContent(user.getRole().getId().toString());
+                    roleElement.getElementsByTagName("name").item(0).setTextContent(user.getRole().getName());
                     saveToFile(document);
                     return true;
                 }
             }
             return false;
         } catch (Exception e) {
-            throw new PersistenceException("XML Update error", e);
+            throw new PersistenceException("XML Update error for user ID: " + user.getId(), e);
         }
     }
 
@@ -125,11 +131,11 @@ public class UserXMLDAO implements UserDAO<UUID> {
         try {
             NodeList nodeList = document.getElementsByTagName("user");
             boolean removed = false;
-            String targetUuid = id.toString();
+            String targetId = id.toString();
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Element element = (Element) nodeList.item(i);
                 String xmlUuid = element.getElementsByTagName("uuid").item(0).getTextContent();
-                if (xmlUuid.equals(targetUuid)) {
+                if (xmlUuid.equals(targetId)) {
                     element.getParentNode().removeChild(element);
                     removed = true;
                     break;
@@ -174,10 +180,12 @@ public class UserXMLDAO implements UserDAO<UUID> {
     }
 
     private User mapNodeToUser(Element element) {
-        UUID uuid = UUID.fromString(element.getElementsByTagName("uuid").item(0).getTextContent());
-        Role role = new Role(element.getElementsByTagName("role_name").item(0).getTextContent());
-        return new User(
-                uuid,
+        UUID id = UUID.fromString(element.getElementsByTagName("id").item(0).getTextContent());
+        Element roleNode = (Element) element.getElementsByTagName("role").item(0);
+        UUID roleId = UUID.fromString(roleNode.getElementsByTagName("id").item(0).getTextContent());
+        String roleName = roleNode.getElementsByTagName("name").item(0).getTextContent();
+        Role role = new Role(roleId, roleName);
+        return new User(id,
                 element.getElementsByTagName("first_name").item(0).getTextContent(),
                 element.getElementsByTagName("last_name").item(0).getTextContent(),
                 element.getElementsByTagName("phone").item(0).getTextContent(),

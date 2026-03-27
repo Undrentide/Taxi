@@ -1,16 +1,19 @@
 package ua.solvd.taxi.domain.dal;
 
+import ua.solvd.taxi.domain.model.Entity;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface DAO<K, T> {
+public interface DAO<T extends Entity> {
     T save(T entity);
 
-    Optional<T> findById(K id);
+    Optional<T> findById(UUID id);
 
     List<T> findAll();
 
-    boolean update(K id, T entity);
+    boolean update(T entity);
 
-    boolean delete(K id);
+    boolean delete(UUID id);
 }

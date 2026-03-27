@@ -16,46 +16,24 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public class DriverDAO implements DAO<Long, Driver> {
+public class DriverDAO implements DAO<Driver> {
 
     @Override
     public Driver save(Driver driver) {
-        String findIdsSql = """    
-                SELECT
-                          u.id AS user_id,
-                          c.id AS car_id,
-                          ds.id AS status_id
-                      FROM user AS u
-                      INNER JOIN car AS c ON c.license_plate = ?
-                      INNER JOIN driver_status AS ds ON ds.name = ?
-                      WHERE u.phone = ?""";
         String insertDriverSql = """
-                 INSERT INTO driver (user_id, car_id, status_id, rating)
-                 VALUES (?, ?, ?, ?)
+                 INSERT INTO driver (id, user_id, car_id, status_id, rating)
+                 VALUES (?, ?, ?, ?, ?)
                 """;
         try {
             return DAOUtil.execute(connection -> {
-                long userId, carId, statusId;
-                try (PreparedStatement preparedStatement = connection.prepareStatement(findIdsSql)) {
-                    preparedStatement.setString(1, driver.getUser().getPhone());
-                    preparedStatement.setString(2, driver.getCar().getLicensePlate());
-                    preparedStatement.setString(3, driver.getDriverStatus().getName());
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            userId = resultSet.getLong("user_id");
-                            carId = resultSet.getLong("car_id");
-                            statusId = resultSet.getLong("status_id");
-                        } else {
-                            throw new SQLException("Could not find related entities (User, Car or Status) to create Driver.");
-                        }
-                    }
-                }
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertDriverSql)) {
-                    preparedStatement.setLong(1, userId);
-                    preparedStatement.setLong(2, carId);
-                    preparedStatement.setLong(3, statusId);
-                    preparedStatement.setBigDecimal(4, driver.getRating());
+                    preparedStatement.setString(1, driver.getId().toString());
+                    preparedStatement.setString(2, driver.getUser().getId().toString());
+                    preparedStatement.setString(3, driver.getCar().getId().toString());
+                    preparedStatement.setString(4, driver.getDriverStatus().getId().toString());
+                    preparedStatement.setBigDecimal(5, driver.getRating());
                     preparedStatement.executeUpdate();
                     return driver;
                 }
@@ -66,27 +44,12 @@ public class DriverDAO implements DAO<Long, Driver> {
     }
 
     @Override
-    public Optional<Driver> findById(Long id) {
-        String sql = """
-                 SELECT
-                     drivers.rating,
-                     users.first_name, users.last_name, users.phone,
-                     roles.name AS role_name,
-                     cars.brand, cars.model, cars.license_plate, cars.color,
-                     classes.name AS class_name, classes.base_price AS class_price,
-                     statuses.name AS status_name
-                 FROM driver AS drivers
-                 INNER JOIN user AS users ON drivers.user_id = users.id
-                 INNER JOIN role AS roles ON users.role_id = roles.id
-                 INNER JOIN car AS cars ON drivers.car_id = cars.id
-                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
-                 INNER JOIN driver_status AS statuses ON drivers.status_id = statuses.id
-                 WHERE drivers.id = ?
-                """;
+    public Optional<Driver> findById(UUID id) {
+        String sql = getBaseSelectQuery() + " WHERE drivers.id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
                     if (resultSet.next()) {
                         return Optional.of(mapRowToDriver(resultSet));
@@ -101,21 +64,7 @@ public class DriverDAO implements DAO<Long, Driver> {
 
     @Override
     public List<Driver> findAll() {
-        String sql = """
-                 SELECT
-                     drivers.rating,
-                     users.first_name, users.last_name, users.phone,
-                     roles.name AS role_name,
-                     cars.brand, cars.model, cars.license_plate, cars.color,
-                     classes.name AS class_name, classes.base_price AS class_price,
-                     statuses.name AS status_name
-                 FROM driver AS drivers
-                 INNER JOIN user AS users ON drivers.user_id = users.id
-                 INNER JOIN role AS roles ON users.role_id = roles.id
-                 INNER JOIN car AS cars ON drivers.car_id = cars.id
-                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
-                 INNER JOIN driver_status AS statuses ON drivers.status_id = statuses.id
-                """;
+        String sql = getBaseSelectQuery();
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -133,32 +82,15 @@ public class DriverDAO implements DAO<Long, Driver> {
     }
 
     public Optional<Driver> findAvailableDriver() {
-        String sql = """
-                 SELECT
-                     drivers.rating,
-                     users.first_name, users.last_name, users.phone,
-                     roles.name AS role_name,
-                     cars.brand, cars.model, cars.license_plate, cars.color,
-                     classes.name AS class_name, classes.base_price AS class_price,
-                     statuses.name AS status_name
-                 FROM driver AS drivers
-                 INNER JOIN user AS users ON drivers.user_id = users.id
-                 INNER JOIN role AS roles ON users.role_id = roles.id
-                 INNER JOIN car AS cars ON drivers.car_id = cars.id
-                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
-                 INNER JOIN driver_status AS statuses ON drivers.status_id = statuses.id
-                 WHERE statuses.name = 'Available'
-                 LIMIT 1
-                """;
+        String sql = getBaseSelectQuery() + " WHERE statuses.name = 'Available' LIMIT 1";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            return Optional.of(mapRowToDriver(resultSet));
-                        }
-                        return Optional.empty();
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    if (resultSet.next()) {
+                        return Optional.of(mapRowToDriver(resultSet));
                     }
+                    return Optional.empty();
                 }
             });
         } catch (SQLException e) {
@@ -167,22 +99,14 @@ public class DriverDAO implements DAO<Long, Driver> {
     }
 
     @Override
-    public boolean update(Long id, Driver driver) {
-        String findStatusIdSql = "SELECT id FROM driver_status WHERE name = ?";
+    public boolean update(Driver driver) {
         String updateSql = "UPDATE driver SET status_id = ?, rating = ? WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
-                long statusId;
-                try (PreparedStatement preparedStatement = connection.prepareStatement(findStatusIdSql)) {
-                    preparedStatement.setString(1, driver.getDriverStatus().getName());
-                    ResultSet resultSet = preparedStatement.executeQuery();
-                    if (!resultSet.next()) throw new SQLException("Status not found");
-                    statusId = resultSet.getLong("id");
-                }
                 try (PreparedStatement preparedStatement = connection.prepareStatement(updateSql)) {
-                    preparedStatement.setLong(1, statusId);
+                    preparedStatement.setString(1, driver.getDriverStatus().getId().toString());
                     preparedStatement.setBigDecimal(2, driver.getRating());
-                    preparedStatement.setLong(3, id);
+                    preparedStatement.setString(3, driver.getId().toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -193,9 +117,10 @@ public class DriverDAO implements DAO<Long, Driver> {
 
     public boolean updateStatusByPhone(String phone, String statusName) {
         String sql = """
-                     UPDATE driver
-                     SET status_id = (SELECT id FROM driver_status WHERE name = ?)\s
-                     WHERE user_id = (SELECT id FROM user WHERE phone = ?)
+                UPDATE driver AS d
+                INNER JOIN user AS u ON d.user_id = u.id
+                SET d.status_id = (SELECT id FROM driver_status WHERE name = ?)
+                WHERE u.phone = ?
                 """;
         try {
             return DAOUtil.execute(connection -> {
@@ -206,17 +131,17 @@ public class DriverDAO implements DAO<Long, Driver> {
                 }
             });
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while updating driver status by phone", e);
+            throw new PersistenceException("Error occurred while updating driver status by phone: " + phone, e);
         }
     }
 
     @Override
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         String sql = "DELETE FROM driver WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -225,55 +150,59 @@ public class DriverDAO implements DAO<Long, Driver> {
         }
     }
 
-    private Driver mapRowToDriver(ResultSet resultSet) {
-        Role role;
-        try {
-            role = new Role(resultSet.getString("role_name"));
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping driver.", e);
-        }
-        User user;
-        try {
-            user = new User(
-                    resultSet.getString("first_name"),
-                    resultSet.getString("last_name"),
-                    resultSet.getString("phone"),
-                    role
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping driver.", e);
-        }
-        CarClass carClass;
-        try {
-            carClass = new CarClass(
-                    resultSet.getString("class_name"),
-                    resultSet.getBigDecimal("class_price")
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping driver.", e);
-        }
-        Car car;
-        try {
-            car = new Car(
-                    resultSet.getString("brand"),
-                    resultSet.getString("model"),
-                    resultSet.getString("license_plate"),
-                    resultSet.getString("color"),
-                    carClass
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping driver.", e);
-        }
-        DriverStatus status;
-        try {
-            status = new DriverStatus(resultSet.getString("status_name"));
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping driver.", e);
-        }
-        try {
-            return new Driver(user, car, status, resultSet.getBigDecimal("rating"));
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping driver.", e);
-        }
+    private String getBaseSelectQuery() {
+        return """
+                 SELECT
+                     drivers.id AS driver_id, drivers.rating,
+                     users.id AS user_id, users.first_name, users.last_name, users.phone,
+                     roles.id AS role_id, roles.name AS role_name,
+                     cars.id AS car_id, cars.brand, cars.model, cars.license_plate, cars.color,
+                     classes.id AS class_id, classes.name AS class_name, classes.base_price AS class_price,
+                     statuses.id AS status_id, statuses.name AS status_name
+                 FROM driver AS drivers
+                 INNER JOIN user AS users ON drivers.user_id = users.id
+                 INNER JOIN role AS roles ON users.role_id = roles.id
+                 INNER JOIN car AS cars ON drivers.car_id = cars.id
+                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
+                 INNER JOIN driver_status AS statuses ON drivers.status_id = statuses.id
+                """;
+    }
+
+    private Driver mapRowToDriver(ResultSet resultSet) throws SQLException {
+        Role role = new Role(
+                UUID.fromString(resultSet.getString("role_id")),
+                resultSet.getString("role_name")
+        );
+        User user = new User(
+                UUID.fromString(resultSet.getString("user_id")),
+                resultSet.getString("first_name"),
+                resultSet.getString("last_name"),
+                resultSet.getString("phone"),
+                role
+        );
+        CarClass carClass = new CarClass(
+                UUID.fromString(resultSet.getString("class_id")),
+                resultSet.getString("class_name"),
+                resultSet.getBigDecimal("class_price")
+        );
+        Car car = new Car(
+                UUID.fromString(resultSet.getString("car_id")),
+                resultSet.getString("brand"),
+                resultSet.getString("model"),
+                resultSet.getString("license_plate"),
+                resultSet.getString("color"),
+                carClass
+        );
+        DriverStatus status = new DriverStatus(
+                UUID.fromString(resultSet.getString("status_id")),
+                resultSet.getString("status_name")
+        );
+        return new Driver(
+                UUID.fromString(resultSet.getString("driver_id")),
+                user,
+                car,
+                status,
+                resultSet.getBigDecimal("rating")
+        );
     }
 }

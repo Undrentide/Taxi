@@ -11,7 +11,7 @@
 
     <xs:complexType name="userType">
         <xs:sequence>
-            <xs:element name="uuid" type="xs:string"/>
+            <xs:element name="id" type="xs:string"/>
             <xs:element name="firstName" type="xs:string"/>
             <xs:element name="lastName" type="xs:string"/>
             <xs:element name="phone" type="xs:string"/>
@@ -21,6 +21,7 @@
 
     <xs:complexType name="roleType">
         <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
             <xs:element name="name" type="xs:string"/>
         </xs:sequence>
     </xs:complexType>

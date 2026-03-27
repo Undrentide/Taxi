@@ -1,24 +1,18 @@
 package ua.solvd.taxi.domain.model;
 
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlTransient;
 import lombok.Getter;
 
 import java.util.UUID;
 
 @Getter
-@XmlAccessorType(XmlAccessType.FIELD)
 public abstract class Entity {
-
-    @XmlTransient
-    private UUID uuid;
+    private final UUID id;
 
     protected Entity() {
-        this.uuid = UUID.randomUUID();
+        this.id = UUID.randomUUID();
     }
 
-    protected Entity(UUID uuid) {
-        this.uuid = uuid;
+    protected Entity(UUID id) {
+        this.id = id;
     }
 }

@@ -11,16 +11,18 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public class OrderStatusDAO implements DAO<Long, OrderStatus> {
+public class OrderStatusDAO implements DAO<OrderStatus> {
 
     @Override
     public OrderStatus save(OrderStatus orderStatus) {
-        String sql = "INSERT INTO order_status (name) VALUES (?)";
+        String sql = "INSERT INTO order_status (id, name) VALUES (?, ?)";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, orderStatus.getName());
+                    preparedStatement.setString(1, orderStatus.getId().toString());
+                    preparedStatement.setString(2, orderStatus.getName());
                     preparedStatement.executeUpdate();
                     return orderStatus;
                 }
@@ -31,12 +33,12 @@ public class OrderStatusDAO implements DAO<Long, OrderStatus> {
     }
 
     @Override
-    public Optional<OrderStatus> findById(Long id) {
-        String sql = "SELECT status.name FROM order_status AS status WHERE status.id = ?";
+    public Optional<OrderStatus> findById(UUID id) {
+        String sql = "SELECT status.id, status.name FROM order_status AS status WHERE status.id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
                     if (resultSet.next()) {
                         return Optional.of(mapRowToOrderStatus(resultSet));
@@ -51,7 +53,7 @@ public class OrderStatusDAO implements DAO<Long, OrderStatus> {
 
     @Override
     public List<OrderStatus> findAll() {
-        String sql = "SELECT status.name FROM order_status AS status";
+        String sql = "SELECT status.id, status.name FROM order_status AS status";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -69,7 +71,7 @@ public class OrderStatusDAO implements DAO<Long, OrderStatus> {
     }
 
     public Optional<OrderStatus> findByName(String name) {
-        String sql = "SELECT status.name FROM order_status AS status WHERE status.name = ?";
+        String sql = "SELECT status.id, status.name FROM order_status AS status WHERE status.name = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -87,13 +89,13 @@ public class OrderStatusDAO implements DAO<Long, OrderStatus> {
     }
 
     @Override
-    public boolean update(Long id, OrderStatus orderStatus) {
+    public boolean update(OrderStatus orderStatus) {
         String sql = "UPDATE order_status SET name = ? WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setString(1, orderStatus.getName());
-                    preparedStatement.setLong(2, id);
+                    preparedStatement.setString(2, orderStatus.getId().toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -103,12 +105,12 @@ public class OrderStatusDAO implements DAO<Long, OrderStatus> {
     }
 
     @Override
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         String sql = "DELETE FROM order_status WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -117,11 +119,10 @@ public class OrderStatusDAO implements DAO<Long, OrderStatus> {
         }
     }
 
-    private OrderStatus mapRowToOrderStatus(ResultSet resultSet) {
-        try {
-            return new OrderStatus(resultSet.getString("name"));
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping order status.", e);
-        }
+    private OrderStatus mapRowToOrderStatus(ResultSet resultSet) throws SQLException {
+        return new OrderStatus(
+                UUID.fromString(resultSet.getString("id")),
+                resultSet.getString("name")
+        );
     }
 }

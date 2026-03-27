@@ -35,24 +35,23 @@ import ua.solvd.taxi.domain.service.impl.PromoCodeCodeServiceImpl;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
-import java.util.UUID;
 
 public class EntryPoint {
     private static final Logger logger = LogManager.getLogger(EntryPoint.class);
     private static final Scanner scanner = new Scanner(System.in);
-    private static final UserDAO<Long> userJDBCDAO = new UserJDBCDAO();
-    private static final UserDAO<UUID> userXMLDAO = new UserXMLDAO();
-    private static final UserDAO<UUID> userJaxbDAO = new UserJaxbDAO();
-    private static final UserDAO<UUID> userJacksonDAO = new UserJacksonDAO();
+    private static final UserDAO userJDBCDAO = new UserJDBCDAO();
+    private static final UserDAO userXMLDAO = new UserXMLDAO();
+    private static final UserDAO userJaxbDAO = new UserJaxbDAO();
+    private static final UserDAO userJacksonDAO = new UserJacksonDAO();
     private static final CarDAO carDAO = new CarDAO();
     private static final DriverDAO driverDAO = new DriverDAO();
     private static final OrderDAO orderDAO = new OrderDAO();
     private static final PromoCodeDAO promoDAO = new PromoCodeDAO();
     private static final OrderStatusDAO orderStatusDAO = new OrderStatusDAO();
-    /*private static final UserService<Long> userService = new UserServiceImpl<>(userJDBCDAO);*/
-    /*private static final UserService<UUID> userService = new UserServiceImpl<>(userXMLDAO);*/
-    /*private static final UserService<UUID> userService = new UserServiceImpl<>(userJaxbDAO);*/
-    private static final UserService<UUID> userService = new UserServiceImpl<>(userJacksonDAO);
+    /*private static final UserService userService = new UserServiceImpl(userJDBCDAO);*/
+    /*private static final UserService userService = new UserServiceImpl(userXMLDAO);*/
+    /*private static final UserService userService = new UserServiceImpl(userJaxbDAO);*/
+    private static final UserService userService = new UserServiceImpl(userJacksonDAO);
     private static final CarService carService = new CarServiceImpl(carDAO);
     private static final DriverService driverService = new DriverServiceImpl(driverDAO);
     private static final OrderService orderService = new OrderServiceImpl(orderDAO, orderStatusDAO, driverDAO);
@@ -126,7 +125,15 @@ public class EntryPoint {
         logger.info("Enter client phone number:");
         String phone = scanner.nextLine();
         User client = userController.findUserByPhone(phone);
+        if (client == null) {
+            logger.error("Client with phone {} not found!", phone);
+            return;
+        }
         Driver driver = driverController.findAvailableDriver();
+        if (driver == null) {
+            logger.warn("No available drivers at the moment.");
+            return;
+        }
         logger.info("Enter promo code (or press Enter to skip):");
         String input = scanner.nextLine();
         PromoCode promoCode = null;

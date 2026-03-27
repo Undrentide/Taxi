@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"uuid", "firstName", "lastName", "phone", "role"})
+@XmlType(propOrder = {"id", "firstName", "lastName", "phone", "role"})
 public class User extends Entity {
     private String firstName;
     private String lastName;
@@ -29,17 +29,17 @@ public class User extends Entity {
         this.role = role;
     }
 
-    public User(UUID uuid, String firstName, String lastName, String phone, Role role) {
-        super(uuid);
+    public User(UUID id, String firstName, String lastName, String phone, Role role) {
+        super(id);
         this.firstName = firstName;
         this.lastName = lastName;
         this.phone = phone;
         this.role = role;
     }
 
-    @XmlElement(name = "uuid")
+    @XmlElement(name = "id")
     @Override
-    public UUID getUuid() {
-        return super.getUuid();
+    public UUID getId() {
+        return super.getId();
     }
 }

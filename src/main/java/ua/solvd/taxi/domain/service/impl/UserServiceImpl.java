@@ -5,10 +5,10 @@ import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 import ua.solvd.taxi.domain.service.UserService;
 
-public class UserServiceImpl<K> implements UserService<K> {
-    private final UserDAO<K> userDAO;
+public class UserServiceImpl implements UserService {
+    private final UserDAO userDAO;
 
-    public UserServiceImpl(UserDAO<K> userDAO) {
+    public UserServiceImpl(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
 

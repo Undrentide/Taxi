@@ -12,30 +12,32 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public class CarDAO implements DAO<Long, Car> {
+public class CarDAO implements DAO<Car> {
 
     @Override
     public Car save(Car car) {
         String findClassIdSql = "SELECT id FROM car_class WHERE name = ?";
-        String insertCarSql = "INSERT INTO car (brand, model, license_plate, color, class_id) VALUES (?, ?, ?, ?, ?)";
+        String insertCarSql = "INSERT INTO car (id, brand, model, license_plate, color, class_id) VALUES (?, ?, ?, ?, ?, ?)";
         try {
             return DAOUtil.execute(connection -> {
-                long classId;
+                String classId;
                 try (PreparedStatement preparedStatement = connection.prepareStatement(findClassIdSql)) {
                     preparedStatement.setString(1, car.getCarClass().getName());
                     ResultSet resultSet = preparedStatement.executeQuery();
                     if (!resultSet.next()) {
                         throw new SQLException("CarClass not found: " + car.getCarClass().getName());
                     }
-                    classId = resultSet.getLong("id");
+                    classId = resultSet.getString("id");
                 }
                 try (PreparedStatement preparedStatement = connection.prepareStatement(insertCarSql)) {
-                    preparedStatement.setString(1, car.getBrand());
-                    preparedStatement.setString(2, car.getModel());
-                    preparedStatement.setString(3, car.getLicensePlate());
-                    preparedStatement.setString(4, car.getColor());
-                    preparedStatement.setLong(5, classId);
+                    preparedStatement.setString(1, car.getId().toString());
+                    preparedStatement.setString(2, car.getBrand());
+                    preparedStatement.setString(3, car.getModel());
+                    preparedStatement.setString(4, car.getLicensePlate());
+                    preparedStatement.setString(5, car.getColor());
+                    preparedStatement.setString(6, classId);
                     preparedStatement.executeUpdate();
                     return car;
                 }
@@ -46,20 +48,12 @@ public class CarDAO implements DAO<Long, Car> {
     }
 
     @Override
-    public Optional<Car> findById(Long id) {
-        String sql = """
-                 SELECT
-                     cars.brand, cars.model, cars.license_plate, cars.color,
-                     classes.name AS class_name,
-                     classes.base_price AS class_price
-                 FROM car AS cars
-                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
-                 WHERE cars.id = ?
-                """;
+    public Optional<Car> findById(UUID id) {
+        String sql = getBaseSelectQuery() + " WHERE cars.id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
                     if (resultSet.next()) {
                         return Optional.of(mapRowToCar(resultSet));
@@ -74,14 +68,7 @@ public class CarDAO implements DAO<Long, Car> {
 
     @Override
     public List<Car> findAll() {
-        String sql = """
-                 SELECT
-                     cars.brand, cars.model, cars.license_plate, cars.color,
-                     classes.name AS class_name,
-                     classes.base_price AS class_price
-                 FROM car AS cars
-                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
-                """;
+        String sql = getBaseSelectQuery();
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -99,7 +86,7 @@ public class CarDAO implements DAO<Long, Car> {
     }
 
     @Override
-    public boolean update(Long id, Car car) {
+    public boolean update(Car car) {
         String findClassIdSql = "SELECT id FROM car_class WHERE name = ?";
         String updateSql = """
                  UPDATE car
@@ -108,20 +95,20 @@ public class CarDAO implements DAO<Long, Car> {
                 """;
         try {
             return DAOUtil.execute(connection -> {
-                long classId;
+                String classId;
                 try (PreparedStatement classStmt = connection.prepareStatement(findClassIdSql)) {
                     classStmt.setString(1, car.getCarClass().getName());
                     ResultSet resultSet = classStmt.executeQuery();
                     if (!resultSet.next()) throw new SQLException("CarClass not found");
-                    classId = resultSet.getLong("id");
+                    classId = resultSet.getString("id");
                 }
                 try (PreparedStatement preparedStatement = connection.prepareStatement(updateSql)) {
                     preparedStatement.setString(1, car.getBrand());
                     preparedStatement.setString(2, car.getModel());
                     preparedStatement.setString(3, car.getLicensePlate());
                     preparedStatement.setString(4, car.getColor());
-                    preparedStatement.setLong(5, classId);
-                    preparedStatement.setLong(6, id);
+                    preparedStatement.setString(5, classId);
+                    preparedStatement.setString(6, car.getId().toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -131,12 +118,12 @@ public class CarDAO implements DAO<Long, Car> {
     }
 
     @Override
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         String sql = "DELETE FROM car WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -145,26 +132,37 @@ public class CarDAO implements DAO<Long, Car> {
         }
     }
 
-    private Car mapRowToCar(ResultSet resultSet) {
-        CarClass carClass;
-        try {
-            carClass = new CarClass(
-                    resultSet.getString("class_name"),
-                    resultSet.getBigDecimal("class_price")
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping car.", e);
-        }
-        try {
-            return new Car(
-                    resultSet.getString("brand"),
-                    resultSet.getString("model"),
-                    resultSet.getString("license_plate"),
-                    resultSet.getString("color"),
-                    carClass
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping car.", e);
-        }
+    private String getBaseSelectQuery() {
+        return """
+                 SELECT
+                     cars.id AS car_id,
+                     cars.brand,
+                     cars.model,
+                     cars.license_plate,
+                     cars.color,
+                     classes.id AS class_id,
+                     classes.name AS class_name,
+                     classes.base_price AS class_price
+                 FROM car AS cars
+                 INNER JOIN car_class AS classes ON cars.class_id = classes.id
+                """;
+    }
+
+    private Car mapRowToCar(ResultSet resultSet) throws SQLException {
+        String carIdStr = resultSet.getString("car_id");
+        String classIdStr = resultSet.getString("class_id");
+        CarClass carClass = new CarClass(
+                UUID.fromString(classIdStr),
+                resultSet.getString("class_name"),
+                resultSet.getBigDecimal("class_price")
+        );
+        return new Car(
+                UUID.fromString(carIdStr),
+                resultSet.getString("brand"),
+                resultSet.getString("model"),
+                resultSet.getString("license_plate"),
+                resultSet.getString("color"),
+                carClass
+        );
     }
 }

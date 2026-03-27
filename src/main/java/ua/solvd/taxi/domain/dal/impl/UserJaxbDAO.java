@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJaxbDAO implements UserDAO<UUID> {
+public class UserJaxbDAO implements UserDAO {
     private static final String FILE_PATH = "src/main/resources/user_jaxb.xml";
     private static final String XSD_PATH = "src/main/resources/user.xsd";
     private final Schema schema;
@@ -80,16 +80,17 @@ public class UserJaxbDAO implements UserDAO<UUID> {
     @Override
     public Optional<User> findById(UUID id) {
         return loadData().getUserList().stream()
-                .filter(user -> user.getUuid().equals(id))
+                .filter(user -> user.getId().equals(id))
                 .findFirst();
     }
 
     @Override
-    public boolean update(UUID id, User user) {
+    public boolean update(User user) {
         UserListWrapper userListWrapper = loadData();
         List<User> userList = userListWrapper.getUserList();
+        UUID targetId = user.getId();
         for (int i = 0; i < userList.size(); i++) {
-            if (userList.get(i).getUuid().equals(id)) {
+            if (userList.get(i).getId().equals(targetId)) {
                 userList.set(i, user);
                 saveData(userListWrapper);
                 return true;
@@ -101,7 +102,7 @@ public class UserJaxbDAO implements UserDAO<UUID> {
     @Override
     public boolean delete(UUID id) {
         UserListWrapper userListWrapper = loadData();
-        boolean removed = userListWrapper.getUserList().removeIf(user -> user.getUuid().equals(id));
+        boolean removed = userListWrapper.getUserList().removeIf(user -> user.getId().equals(id));
         if (removed) saveData(userListWrapper);
         return removed;
     }

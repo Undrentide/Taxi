@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJacksonDAO implements UserDAO<UUID> {
+public class UserJacksonDAO implements UserDAO {
     private static final String FILE_PATH = "src/main/resources/users.json";
     private final ObjectMapper mapper;
 
@@ -57,7 +57,7 @@ public class UserJacksonDAO implements UserDAO<UUID> {
     @Override
     public Optional<User> findById(UUID id) {
         return loadData().stream()
-                .filter(user -> user.getUuid().equals(id))
+                .filter(user -> user.getId().equals(id))
                 .findFirst();
     }
 
@@ -74,10 +74,11 @@ public class UserJacksonDAO implements UserDAO<UUID> {
     }
 
     @Override
-    public boolean update(UUID id, User updatedUser) {
+    public boolean update(User updatedUser) {
         List<User> userList = loadData();
+        UUID targetId = updatedUser.getId();
         for (int i = 0; i < userList.size(); i++) {
-            if (userList.get(i).getUuid().equals(id)) {
+            if (userList.get(i).getId().equals(targetId)) {
                 userList.set(i, updatedUser);
                 saveData(userList);
                 return true;
@@ -89,7 +90,7 @@ public class UserJacksonDAO implements UserDAO<UUID> {
     @Override
     public boolean delete(UUID id) {
         List<User> userList = loadData();
-        boolean removed = userList.removeIf(user -> user.getUuid().equals(id));
+        boolean removed = userList.removeIf(user -> user.getId().equals(id));
         if (removed) {
             saveData(userList);
         }

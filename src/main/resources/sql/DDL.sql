@@ -4,51 +4,51 @@ USE taxi;
 
 CREATE TABLE IF NOT EXISTS `role`
 (
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL
+    id   VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS `user`
 (
-    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-    first_name VARCHAR(50),
-    last_name  VARCHAR(50),
-    phone      VARCHAR(20) UNIQUE,
-    role_id    BIGINT,
+    id         VARCHAR(36) PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name  VARCHAR(50) NOT NULL,
+    phone      VARCHAR(20) NOT NULL UNIQUE,
+    role_id    VARCHAR(36) NOT NULL,
     FOREIGN KEY (role_id) REFERENCES `role` (id)
 );
 
 CREATE TABLE IF NOT EXISTS driver_status
 (
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50)
+    id   VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS car_class
 (
-    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name       VARCHAR(50),
-    base_price DECIMAL(10, 2)
+    id         VARCHAR(36) PRIMARY KEY,
+    name       VARCHAR(50)    NOT NULL,
+    base_price DECIMAL(10, 2) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS car
 (
-    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
-    brand         VARCHAR(50),
-    model         VARCHAR(50),
-    license_plate VARCHAR(20) UNIQUE,
-    color         VARCHAR(30),
-    class_id      BIGINT,
+    id            VARCHAR(36) PRIMARY KEY,
+    brand         VARCHAR(50) NOT NULL,
+    model         VARCHAR(50) NOT NULL,
+    license_plate VARCHAR(20) NOT NULL UNIQUE,
+    color         VARCHAR(30) NOT NULL,
+    class_id      VARCHAR(36) NOT NULL,
     FOREIGN KEY (class_id) REFERENCES car_class (id)
 );
 
 CREATE TABLE IF NOT EXISTS driver
 (
-    id        BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id   BIGINT,
-    car_id    BIGINT,
-    status_id BIGINT,
-    rating    DECIMAL(3, 2) DEFAULT 5.0,
+    id        VARCHAR(36) PRIMARY KEY,
+    user_id   VARCHAR(36)               NOT NULL,
+    car_id    VARCHAR(36)               NOT NULL,
+    status_id VARCHAR(36)               NOT NULL,
+    rating    DECIMAL(3, 2) DEFAULT 5.0 NOT NULL,
     FOREIGN KEY (user_id) REFERENCES `user` (id),
     FOREIGN KEY (car_id) REFERENCES car (id),
     FOREIGN KEY (status_id) REFERENCES driver_status (id)
@@ -56,42 +56,42 @@ CREATE TABLE IF NOT EXISTS driver
 
 CREATE TABLE IF NOT EXISTS payment_type
 (
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50)
+    id   VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS order_status
 (
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50)
+    id   VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS promo_code
 (
-    id               BIGINT PRIMARY KEY AUTO_INCREMENT,
-    code             VARCHAR(20) UNIQUE,
-    discount_percent INT,
-    is_active        BOOLEAN DEFAULT TRUE
+    id               VARCHAR(36) PRIMARY KEY,
+    code             VARCHAR(20)          NOT NULL UNIQUE,
+    discount_percent INT                  NOT NULL,
+    is_active        BOOLEAN DEFAULT TRUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS region
 (
-    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name       VARCHAR(100),
-    multiplier DECIMAL(3, 2) DEFAULT 1.0
+    id         VARCHAR(36) PRIMARY KEY,
+    name       VARCHAR(100)              NOT NULL,
+    multiplier DECIMAL(3, 2) DEFAULT 1.0 NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `order`
 (
-    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
-    client_id     BIGINT,
-    driver_id     BIGINT,
-    status_id     BIGINT,
-    promo_code_id BIGINT,
-    region_id     BIGINT,
-    from_address  VARCHAR(255),
-    to_address    VARCHAR(255),
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id            VARCHAR(36) PRIMARY KEY,
+    client_id     VARCHAR(36)                         NOT NULL,
+    driver_id     VARCHAR(36)                         NOT NULL,
+    status_id     VARCHAR(36)                         NOT NULL,
+    promo_code_id VARCHAR(36),
+    region_id     VARCHAR(36)                         NOT NULL,
+    from_address  VARCHAR(255)                        NOT NULL,
+    to_address    VARCHAR(255)                        NOT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (client_id) REFERENCES `user` (id),
     FOREIGN KEY (driver_id) REFERENCES driver (id),
     FOREIGN KEY (status_id) REFERENCES order_status (id),
@@ -101,40 +101,40 @@ CREATE TABLE IF NOT EXISTS `order`
 
 CREATE TABLE IF NOT EXISTS payment
 (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    order_id        BIGINT,
-    amount          DECIMAL(10, 2),
-    payment_type_id BIGINT,
-    paid_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id              VARCHAR(36) PRIMARY KEY,
+    order_id        VARCHAR(36)                         NOT NULL,
+    amount          DECIMAL(10, 2)                      NOT NULL,
+    payment_type_id VARCHAR(36)                         NOT NULL,
+    paid_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (order_id) REFERENCES `order` (id),
     FOREIGN KEY (payment_type_id) REFERENCES payment_type (id)
 );
 
 CREATE TABLE IF NOT EXISTS review
 (
-    id       BIGINT PRIMARY KEY AUTO_INCREMENT,
-    order_id BIGINT,
-    rating   INT CHECK (rating BETWEEN 1 AND 5),
+    id       VARCHAR(36) PRIMARY KEY,
+    order_id VARCHAR(36)                        NOT NULL,
+    rating   INT CHECK (rating BETWEEN 1 AND 5) NOT NULL,
     comment  TEXT,
     FOREIGN KEY (order_id) REFERENCES `order` (id)
 );
 
 CREATE TABLE IF NOT EXISTS support_ticket
 (
-    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_id     BIGINT,
-    subject     VARCHAR(255),
-    message     TEXT,
-    is_resolved BOOLEAN DEFAULT FALSE,
+    id          VARCHAR(36) PRIMARY KEY,
+    user_id     VARCHAR(36)           NOT NULL,
+    subject     VARCHAR(255)          NOT NULL,
+    message     TEXT                  NOT NULL,
+    is_resolved BOOLEAN DEFAULT FALSE NOT NULL,
     FOREIGN KEY (user_id) REFERENCES `user` (id)
 );
 
 CREATE TABLE IF NOT EXISTS driver_location_log
 (
-    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-    driver_id  BIGINT,
-    latitude   DECIMAL(10, 8),
-    longitude  DECIMAL(11, 8),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id         VARCHAR(36) PRIMARY KEY,
+    driver_id  VARCHAR(36)                         NOT NULL,
+    latitude   DECIMAL(10, 8)                      NOT NULL,
+    longitude  DECIMAL(11, 8)                      NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (driver_id) REFERENCES driver (id)
 )

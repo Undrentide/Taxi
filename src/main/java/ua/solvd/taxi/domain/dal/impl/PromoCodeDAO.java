@@ -11,18 +11,20 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public class PromoCodeDAO implements DAO<Long, PromoCode> {
+public class PromoCodeDAO implements DAO<PromoCode> {
 
     @Override
     public PromoCode save(PromoCode promoCode) {
-        String sql = "INSERT INTO promo_code (code, discount_percent, is_active) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO promo_code (id, code, discount_percent, is_active) VALUES (?, ?, ?, ?)";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, promoCode.getCode());
-                    preparedStatement.setInt(2, promoCode.getDiscountPercent());
-                    preparedStatement.setBoolean(3, promoCode.isActive());
+                    preparedStatement.setString(1, promoCode.getId().toString());
+                    preparedStatement.setString(2, promoCode.getCode());
+                    preparedStatement.setInt(3, promoCode.getDiscountPercent());
+                    preparedStatement.setBoolean(4, promoCode.isActive());
                     preparedStatement.executeUpdate();
                     return promoCode;
                 }
@@ -33,12 +35,12 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
     }
 
     @Override
-    public Optional<PromoCode> findById(Long id) {
-        String sql = "SELECT promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo WHERE promo.id = ?";
+    public Optional<PromoCode> findById(UUID id) {
+        String sql = "SELECT promo.id, promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo WHERE promo.id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     ResultSet resultSet = preparedStatement.executeQuery();
                     if (resultSet.next()) {
                         return Optional.of(mapRowToPromoCode(resultSet));
@@ -53,7 +55,7 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
 
     @Override
     public List<PromoCode> findAll() {
-        String sql = "SELECT promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo";
+        String sql = "SELECT promo.id, promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -71,7 +73,7 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
     }
 
     public Optional<PromoCode> findByCode(String code) {
-        String sql = "SELECT promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo WHERE promo.code = ?";
+        String sql = "SELECT promo.id, promo.code, promo.discount_percent, promo.is_active FROM promo_code AS promo WHERE promo.code = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -89,7 +91,7 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
     }
 
     @Override
-    public boolean update(Long id, PromoCode promoCode) {
+    public boolean update(PromoCode promoCode) {
         String sql = "UPDATE promo_code SET code = ?, discount_percent = ?, is_active = ? WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
@@ -97,7 +99,7 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
                     preparedStatement.setString(1, promoCode.getCode());
                     preparedStatement.setInt(2, promoCode.getDiscountPercent());
                     preparedStatement.setBoolean(3, promoCode.isActive());
-                    preparedStatement.setLong(4, id);
+                    preparedStatement.setString(4, promoCode.getId().toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -107,12 +109,12 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
     }
 
     @Override
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         String sql = "DELETE FROM promo_code WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setLong(1, id);
+                    preparedStatement.setString(1, id.toString());
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
@@ -121,15 +123,13 @@ public class PromoCodeDAO implements DAO<Long, PromoCode> {
         }
     }
 
-    private PromoCode mapRowToPromoCode(ResultSet resultSet) {
-        try {
-            return new PromoCode(
-                    resultSet.getString("code"),
-                    resultSet.getInt("discount_percent"),
-                    resultSet.getBoolean("is_active")
-            );
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping promo code", e);
-        }
+    private PromoCode mapRowToPromoCode(ResultSet resultSet) throws SQLException {
+        UUID id = UUID.fromString(resultSet.getString("id"));
+        return new PromoCode(
+                id,
+                resultSet.getString("code"),
+                resultSet.getInt("discount_percent"),
+                resultSet.getBoolean("is_active")
+        );
     }
 }
