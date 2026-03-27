@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class OrderStatusDAOUtil implements DAO<Long, OrderStatus> {
+public class OrderStatusDAO implements DAO<Long, OrderStatus> {
 
     @Override
     public OrderStatus save(OrderStatus orderStatus) {

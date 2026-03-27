@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class DriverLocationDAOUtil implements DAO<Long, DriverLocation> {
+public class DriverLocationDAO implements DAO<Long, DriverLocation> {
 
     @Override
     public DriverLocation save(DriverLocation driverLocation) {

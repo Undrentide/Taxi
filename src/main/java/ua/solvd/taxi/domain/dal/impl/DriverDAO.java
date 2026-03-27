@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class DriverDAOUtil implements DAO<Long, Driver> {
+public class DriverDAO implements DAO<Long, Driver> {
 
     @Override
     public Driver save(Driver driver) {

@@ -3,7 +3,7 @@ package ua.solvd.taxi.domain.dal.impl;
 import ua.solvd.taxi.util.DAOUtil;
 import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
-import ua.solvd.taxi.domain.model.impl.PaymentType;
+import ua.solvd.taxi.domain.model.impl.Region;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,83 +12,85 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PaymentTypeDAOUtil implements DAO<Long, PaymentType> {
+public class RegionDAO implements DAO<Long, Region> {
 
     @Override
-    public PaymentType save(PaymentType paymentType) {
-        String sql = "INSERT INTO payment_type (name) VALUES (?)";
+    public Region save(Region region) {
+        String sql = "INSERT INTO region (name, multiplier) VALUES (?, ?)";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, paymentType.getName());
+                    preparedStatement.setString(1, region.getName());
+                    preparedStatement.setBigDecimal(2, region.getMultiplier());
                     preparedStatement.executeUpdate();
-                    return paymentType;
+                    return region;
                 }
             });
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while saving payment type.", e);
+            throw new PersistenceException("Error occurred while saving region.", e);
         }
     }
 
     @Override
-    public Optional<PaymentType> findById(Long id) {
-        String sql = "SELECT types.name FROM payment_type AS types WHERE types.id = ?";
+    public Optional<Region> findById(Long id) {
+        String sql = "SELECT regions.name, regions.multiplier FROM region AS regions WHERE regions.id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     preparedStatement.setLong(1, id);
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
                         if (resultSet.next()) {
-                            return Optional.of(mapRowToPaymentType(resultSet));
+                            return Optional.of(mapRowToRegion(resultSet));
                         }
                         return Optional.empty();
                     }
                 }
             });
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while finding payment type by id.", e);
+            throw new PersistenceException("Error occurred while finding region by id.", e);
         }
     }
 
     @Override
-    public List<PaymentType> findAll() {
-        String sql = "SELECT types.name FROM payment_type AS types";
+    public List<Region> findAll() {
+        String sql = "SELECT regions.name, regions.multiplier FROM region AS regions";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                     try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        List<PaymentType> paymentTypeList = new ArrayList<>();
+                        List<Region> regionList = new ArrayList<>();
                         while (resultSet.next()) {
-                            paymentTypeList.add(mapRowToPaymentType(resultSet));
+                            regionList.add(mapRowToRegion(resultSet));
                         }
-                        return paymentTypeList;
+                        return regionList;
                     }
                 }
             });
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while finding all payment types.", e);
+            throw new PersistenceException("Error occurred while finding all regions.", e);
         }
     }
 
     @Override
-    public boolean update(Long id, PaymentType paymentType) {
-        String sql = "UPDATE payment_type SET name = ? WHERE id = ?";
+    public boolean update(Long id, Region region) {
+        String sql = "UPDATE region SET name = ?, multiplier = ? WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, paymentType.getName());
-                    preparedStatement.setLong(2, id);
+                    preparedStatement.setString(1, region.getName());
+                    preparedStatement.setBigDecimal(2, region.getMultiplier());
+                    preparedStatement.setLong(3, id);
                     return preparedStatement.executeUpdate() > 0;
                 }
             });
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while updating payment type.", e);
+            throw new PersistenceException("Error occurred while updating region.", e);
         }
     }
 
     @Override
     public boolean delete(Long id) {
-        String sql = "DELETE FROM payment_type WHERE id = ?";
+        String sql = "DELETE FROM region WHERE id = ?";
         try {
             return DAOUtil.execute(connection -> {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -97,15 +99,18 @@ public class PaymentTypeDAOUtil implements DAO<Long, PaymentType> {
                 }
             });
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while deleting payment type.", e);
+            throw new PersistenceException("Error occurred while deleting region.", e);
         }
     }
 
-    private PaymentType mapRowToPaymentType(ResultSet resultSet) {
+    private Region mapRowToRegion(ResultSet resultSet) {
         try {
-            return new PaymentType(resultSet.getString("name"));
+            return new Region(
+                    resultSet.getString("name"),
+                    resultSet.getBigDecimal("multiplier")
+            );
         } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while mapping payment type.", e);
+            throw new PersistenceException("Error occurred while mapping region.", e);
         }
     }
 }

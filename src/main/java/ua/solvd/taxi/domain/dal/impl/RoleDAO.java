@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class RoleDAOUtil implements DAO<Long, Role> {
+public class RoleDAO implements DAO<Long, Role> {
 
     @Override
     public Role save(Role role) {

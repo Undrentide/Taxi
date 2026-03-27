@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class SupportTicketDAOUtil implements DAO<Long, SupportTicket> {
+public class SupportTicketDAO implements DAO<Long, SupportTicket> {
 
     @Override
     public SupportTicket save(SupportTicket supportTicket) {

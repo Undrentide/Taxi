@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PaymentDAOUtil implements DAO<Long, Payment> {
+public class PaymentDAO implements DAO<Long, Payment> {
 
     @Override
     public Payment save(Payment payment) {

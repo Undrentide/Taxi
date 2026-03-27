@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CarDAOUtil implements DAO<Long, Car> {
+public class CarDAO implements DAO<Long, Car> {
 
     @Override
     public Car save(Car car) {

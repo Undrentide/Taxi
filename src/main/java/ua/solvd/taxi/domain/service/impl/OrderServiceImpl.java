@@ -2,9 +2,9 @@ package ua.solvd.taxi.domain.service.impl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.domain.dal.impl.DriverDAOUtil;
-import ua.solvd.taxi.domain.dal.impl.OrderDAOUtil;
-import ua.solvd.taxi.domain.dal.impl.OrderStatusDAOUtil;
+import ua.solvd.taxi.domain.dal.impl.DriverDAO;
+import ua.solvd.taxi.domain.dal.impl.OrderDAO;
+import ua.solvd.taxi.domain.dal.impl.OrderStatusDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.model.impl.Order;
@@ -18,11 +18,11 @@ import java.time.Instant;
 
 public class OrderServiceImpl implements OrderService {
     private static final Logger logger = LogManager.getLogger(OrderServiceImpl.class);
-    private final OrderDAOUtil orderDAO;
-    private final OrderStatusDAOUtil orderStatusDAO;
-    private final DriverDAOUtil driverDAO;
+    private final OrderDAO orderDAO;
+    private final OrderStatusDAO orderStatusDAO;
+    private final DriverDAO driverDAO;
 
-    public OrderServiceImpl(OrderDAOUtil orderDAO, OrderStatusDAOUtil orderStatusDAO, DriverDAOUtil driverDAO) {
+    public OrderServiceImpl(OrderDAO orderDAO, OrderStatusDAO orderStatusDAO, DriverDAO driverDAO) {
         this.orderDAO = orderDAO;
         this.orderStatusDAO = orderStatusDAO;
         this.driverDAO = driverDAO;

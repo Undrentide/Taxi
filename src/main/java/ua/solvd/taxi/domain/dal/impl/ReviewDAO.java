@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ReviewDAOUtil implements DAO<Long, Review> {
+public class ReviewDAO implements DAO<Long, Review> {
 
     @Override
     public Review save(Review review) {

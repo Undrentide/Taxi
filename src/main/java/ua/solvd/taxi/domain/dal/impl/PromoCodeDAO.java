@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PromoCodeDAOUtil implements DAO<Long, PromoCode> {
+public class PromoCodeDAO implements DAO<Long, PromoCode> {
 
     @Override
     public PromoCode save(PromoCode promoCode) {

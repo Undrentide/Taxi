@@ -1,7 +1,7 @@
 package ua.solvd.taxi.domain.dal.impl;
 
+import ua.solvd.taxi.domain.dal.UserDAO;
 import ua.solvd.taxi.util.DAOUtil;
-import ua.solvd.taxi.domain.dal.DAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
 import ua.solvd.taxi.domain.model.impl.User;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class UserJDBCDAO implements DAO<Long, User> {
+public class UserJDBCDAO implements UserDAO<Long> {
 
     @Override
     public User save(User user) {
@@ -99,6 +99,7 @@ public class UserJDBCDAO implements DAO<Long, User> {
         }
     }
 
+    @Override
     public Optional<User> findUserByPhone(String phone) {
         String sql = """
                  SELECT

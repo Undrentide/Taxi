@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class OrderDAOUtil implements DAO<Long, Order> {
+public class OrderDAO implements DAO<Long, Order> {
 
     @Override
     public Order save(Order order) {

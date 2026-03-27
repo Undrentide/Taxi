@@ -1,14 +1,14 @@
 package ua.solvd.taxi.domain.service.impl;
 
-import ua.solvd.taxi.domain.dal.impl.UserXMLDAO;
+import ua.solvd.taxi.domain.dal.UserDAO;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 import ua.solvd.taxi.domain.service.UserService;
 
-public class UserServiceImpl implements UserService {
-    private final UserXMLDAO userDAO;
+public class UserServiceImpl<K> implements UserService<K> {
+    private final UserDAO<K> userDAO;
 
-    public UserServiceImpl(UserXMLDAO userDAO) {
+    public UserServiceImpl(UserDAO<K> userDAO) {
         this.userDAO = userDAO;
     }
 
