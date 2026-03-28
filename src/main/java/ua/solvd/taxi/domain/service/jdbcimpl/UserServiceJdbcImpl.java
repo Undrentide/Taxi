@@ -1,14 +1,14 @@
 package ua.solvd.taxi.domain.service.jdbcimpl;
 
-import ua.solvd.taxi.domain.dal.jdbcimpl.UserJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.UserJdbcDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 import ua.solvd.taxi.domain.service.UserService;
 
-public class UserServiceJDBCImpl implements UserService {
-    private final UserJDBCDAO userDAO;
+public class UserServiceJdbcImpl implements UserService {
+    private final UserJdbcDao userDAO;
 
-    public UserServiceJDBCImpl(UserJDBCDAO userDAO) {
+    public UserServiceJdbcImpl(UserJdbcDao userDAO) {
         this.userDAO = userDAO;
     }
 

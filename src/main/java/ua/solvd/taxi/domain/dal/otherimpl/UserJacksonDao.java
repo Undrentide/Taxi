@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import ua.solvd.taxi.domain.dal.UserOtherDAO;
+import ua.solvd.taxi.domain.dal.UserOtherDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 
@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJacksonDAO implements UserOtherDAO {
+public class UserJacksonDao implements UserOtherDao {
     private static final String FILE_PATH = "src/main/resources/user.json";
     private final ObjectMapper mapper;
 
-    public UserJacksonDAO() {
+    public UserJacksonDao() {
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new JavaTimeModule());
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);

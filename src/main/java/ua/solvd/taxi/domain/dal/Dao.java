@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface DAO<T extends Entity> {
+public interface Dao<T extends Entity> {
     T save(T entity);
 
     Optional<T> findById(UUID id);

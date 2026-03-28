@@ -1,16 +1,16 @@
 package ua.solvd.taxi.domain.service.jdbcimpl;
 
-import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJdbcDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.service.DriverService;
 
 import java.util.List;
 
-public class DriverServiceJDBCImpl implements DriverService {
-    private final DriverJDBCDAO driverJDBCDAO;
+public class DriverServiceJdbcImpl implements DriverService {
+    private final DriverJdbcDao driverJDBCDAO;
 
-    public DriverServiceJDBCImpl(DriverJDBCDAO driverJDBCDAO) {
+    public DriverServiceJdbcImpl(DriverJdbcDao driverJDBCDAO) {
         this.driverJDBCDAO = driverJDBCDAO;
     }
 

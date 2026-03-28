@@ -2,9 +2,9 @@ package ua.solvd.taxi.domain.service.jdbcimpl;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJDBCDAO;
-import ua.solvd.taxi.domain.dal.jdbcimpl.OrderJDBCDAO;
-import ua.solvd.taxi.domain.dal.jdbcimpl.OrderStatusJDBCDAO;
+import ua.solvd.taxi.domain.dal.jdbcimpl.DriverJdbcDao;
+import ua.solvd.taxi.domain.dal.jdbcimpl.OrderJdbcDao;
+import ua.solvd.taxi.domain.dal.jdbcimpl.OrderStatusJdbcDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Driver;
 import ua.solvd.taxi.domain.model.impl.Order;
@@ -16,13 +16,13 @@ import ua.solvd.taxi.domain.service.OrderService;
 
 import java.time.Instant;
 
-public class OrderServiceJDBCImpl implements OrderService {
-    private static final Logger logger = LogManager.getLogger(OrderServiceJDBCImpl.class);
-    private final OrderJDBCDAO orderJDBCDAO;
-    private final OrderStatusJDBCDAO orderStatusJDBCDAO;
-    private final DriverJDBCDAO driverJDBCDAO;
+public class OrderServiceJdbcImpl implements OrderService {
+    private static final Logger logger = LogManager.getLogger(OrderServiceJdbcImpl.class);
+    private final OrderJdbcDao orderJDBCDAO;
+    private final OrderStatusJdbcDao orderStatusJDBCDAO;
+    private final DriverJdbcDao driverJDBCDAO;
 
-    public OrderServiceJDBCImpl(OrderJDBCDAO orderJDBCDAO, OrderStatusJDBCDAO orderStatusJDBCDAO, DriverJDBCDAO driverJDBCDAO) {
+    public OrderServiceJdbcImpl(OrderJdbcDao orderJDBCDAO, OrderStatusJdbcDao orderStatusJDBCDAO, DriverJdbcDao driverJDBCDAO) {
         this.orderJDBCDAO = orderJDBCDAO;
         this.orderStatusJDBCDAO = orderStatusJDBCDAO;
         this.driverJDBCDAO = driverJDBCDAO;

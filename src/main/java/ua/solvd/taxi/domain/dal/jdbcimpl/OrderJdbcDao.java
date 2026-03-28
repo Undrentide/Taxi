@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.domain.dal.JDBCDAO;
+import ua.solvd.taxi.domain.dal.JdbcDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -23,112 +23,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class OrderJDBCDAO extends JDBCDAO<Order> {
+public class OrderJdbcDao extends JdbcDao<Order> {
 
-    @Override
-    public Order save(Order order) {
-        String insertSql = """
+    private static final class SqlQuery {
+        static final String INSERT = """
                   INSERT INTO `order` (id, client_id, driver_id, status_id, promo_code_id, region_id, from_address, to_address, created_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
-                    preparedStatement.setString(1, order.getId().toString());
-                    preparedStatement.setString(2, order.getClient().getId().toString());
-                    preparedStatement.setString(3, order.getDriver().getId().toString());
-                    preparedStatement.setString(4, order.getOrderStatus().getId().toString());
-                    if (order.getPromoCode() != null) {
-                        preparedStatement.setString(5, order.getPromoCode().getId().toString());
-                    } else {
-                        preparedStatement.setNull(5, Types.VARCHAR);
-                    }
-                    preparedStatement.setString(6, order.getRegion().getId().toString());
-                    preparedStatement.setString(7, order.getFromAddress());
-                    preparedStatement.setString(8, order.getToAddress());
-                    preparedStatement.setTimestamp(9, Timestamp.from(order.getCreatedAt()));
-                    preparedStatement.executeUpdate();
-                    return order;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while saving order.", e);
-        }
-    }
 
-    @Override
-    public Optional<Order> findById(UUID id) {
-        String sql = getBaseSelectQuery() + " WHERE orders.id = ?";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, id.toString());
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            return Optional.of(mapRowToOrder(resultSet));
-                        }
-                        return Optional.empty();
-                    }
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while finding order by id.", e);
-        }
-    }
+        static final String UPDATE = "UPDATE `order` SET status_id = ? WHERE id = ?";
 
-    @Override
-    public List<Order> findAll() {
-        String sql = getBaseSelectQuery();
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                        List<Order> orderList = new ArrayList<>();
-                        while (resultSet.next()) {
-                            orderList.add(mapRowToOrder(resultSet));
-                        }
-                        return orderList;
-                    }
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while finding all orders.", e);
-        }
-    }
+        static final String DELETE = "DELETE FROM `order` WHERE id = ?";
 
-    @Override
-    public boolean update(Order order) {
-        String sql = "UPDATE `order` SET status_id = ? WHERE id = ?";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, order.getOrderStatus().getId().toString());
-                    preparedStatement.setString(2, order.getId().toString());
-                    return preparedStatement.executeUpdate() > 0;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while updating order.", e);
-        }
-    }
-
-    @Override
-    public boolean delete(UUID id) {
-        String sql = "DELETE FROM `order` WHERE id = ?";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, id.toString());
-                    return preparedStatement.executeUpdate() > 0;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while deleting order.", e);
-        }
-    }
-
-    private String getBaseSelectQuery() {
-        return """
+        static final String BASE_SELECT = """
                   SELECT
                       orders.id AS order_id, orders.from_address, orders.to_address, orders.created_at AS order_date,
                       clients.id AS client_id, clients.first_name AS client_fn, clients.last_name AS client_ln, clients.phone AS client_ph,
@@ -155,6 +62,91 @@ public class OrderJDBCDAO extends JDBCDAO<Order> {
                   LEFT JOIN promo_code AS promos ON orders.promo_code_id = promos.id
                   INNER JOIN region AS regions ON orders.region_id = regions.id
                 """;
+
+        static final String FIND_BY_ID = BASE_SELECT + " WHERE orders.id = ?";
+    }
+
+    @Override
+    public Order save(Order order) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.INSERT)) {
+                preparedStatement.setString(1, order.getId().toString());
+                preparedStatement.setString(2, order.getClient().getId().toString());
+                preparedStatement.setString(3, order.getDriver().getId().toString());
+                preparedStatement.setString(4, order.getOrderStatus().getId().toString());
+                if (order.getPromoCode() != null) {
+                    preparedStatement.setString(5, order.getPromoCode().getId().toString());
+                } else {
+                    preparedStatement.setNull(5, Types.VARCHAR);
+                }
+                preparedStatement.setString(6, order.getRegion().getId().toString());
+                preparedStatement.setString(7, order.getFromAddress());
+                preparedStatement.setString(8, order.getToAddress());
+                preparedStatement.setTimestamp(9, Timestamp.from(order.getCreatedAt()));
+                preparedStatement.executeUpdate();
+                return order;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while saving order.", e);
+            }
+        });
+    }
+
+    @Override
+    public Optional<Order> findById(UUID id) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.FIND_BY_ID)) {
+                preparedStatement.setString(1, id.toString());
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return Optional.of(mapRowToOrder(resultSet));
+                    }
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while finding order by id.", e);
+            }
+        });
+    }
+
+    @Override
+    public List<Order> findAll() {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.BASE_SELECT);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+                List<Order> orderList = new ArrayList<>();
+                while (resultSet.next()) {
+                    orderList.add(mapRowToOrder(resultSet));
+                }
+                return orderList;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while finding all orders.", e);
+            }
+        });
+    }
+
+    @Override
+    public boolean update(Order order) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.UPDATE)) {
+                preparedStatement.setString(1, order.getOrderStatus().getId().toString());
+                preparedStatement.setString(2, order.getId().toString());
+                return preparedStatement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while updating order.", e);
+            }
+        });
+    }
+
+    @Override
+    public boolean delete(UUID id) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.DELETE)) {
+                preparedStatement.setString(1, id.toString());
+                return preparedStatement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while deleting order.", e);
+            }
+        });
     }
 
     private Order mapRowToOrder(ResultSet resultSet) throws SQLException {

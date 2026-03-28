@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.jdbcimpl;
 
-import ua.solvd.taxi.domain.dal.JDBCDAO;
+import ua.solvd.taxi.domain.dal.JdbcDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -22,99 +22,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ReviewJDBCDAO extends JDBCDAO<Review> {
+public class ReviewJdbcDao extends JdbcDao<Review> {
 
-    @Override
-    public Review save(Review review) {
-        String insertSql = "INSERT INTO review (id, order_id, rating, comment) VALUES (?, ?, ?, ?)";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
-                    preparedStatement.setString(1, review.getId().toString());
-                    preparedStatement.setString(2, review.getOrder().getId().toString());
-                    preparedStatement.setInt(3, review.getRating());
-                    preparedStatement.setString(4, review.getComment());
-                    preparedStatement.executeUpdate();
-                    return review;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while saving review.", e);
-        }
-    }
+    private static final class SqlQuery {
+        static final String INSERT = "INSERT INTO review (id, order_id, rating, comment) VALUES (?, ?, ?, ?)";
 
-    @Override
-    public Optional<Review> findById(UUID id) {
-        String sql = getBaseSelectQuery() + " WHERE reviews.id = ?";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, id.toString());
-                    ResultSet resultSet = preparedStatement.executeQuery();
-                    if (resultSet.next()) {
-                        return Optional.of(mapRowToReview(resultSet));
-                    }
-                    return Optional.empty();
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while finding review by id.", e);
-        }
-    }
+        static final String UPDATE = "UPDATE review SET rating = ?, comment = ? WHERE id = ?";
 
-    @Override
-    public List<Review> findAll() {
-        String sql = getBaseSelectQuery();
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    ResultSet resultSet = preparedStatement.executeQuery();
-                    List<Review> reviewList = new ArrayList<>();
-                    while (resultSet.next()) {
-                        reviewList.add(mapRowToReview(resultSet));
-                    }
-                    return reviewList;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while finding all reviews.", e);
-        }
-    }
+        static final String DELETE = "DELETE FROM review WHERE id = ?";
 
-    @Override
-    public boolean update(Review review) {
-        String sql = "UPDATE review SET rating = ?, comment = ? WHERE id = ?";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setInt(1, review.getRating());
-                    preparedStatement.setString(2, review.getComment());
-                    preparedStatement.setString(3, review.getId().toString());
-                    return preparedStatement.executeUpdate() > 0;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while updating review.", e);
-        }
-    }
-
-    @Override
-    public boolean delete(UUID id) {
-        String sql = "DELETE FROM review WHERE id = ?";
-        try {
-            return execute(connection -> {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                    preparedStatement.setString(1, id.toString());
-                    return preparedStatement.executeUpdate() > 0;
-                }
-            });
-        } catch (SQLException e) {
-            throw new PersistenceException("Error occurred while deleting review.", e);
-        }
-    }
-
-    private String getBaseSelectQuery() {
-        return """
+        static final String BASE_SELECT = """
                   SELECT
                       reviews.id AS review_id, reviews.rating AS review_rating, reviews.comment AS review_comment,
                       orders.id AS order_id, orders.from_address, orders.to_address, orders.created_at AS order_date,
@@ -143,6 +60,83 @@ public class ReviewJDBCDAO extends JDBCDAO<Review> {
                   LEFT JOIN promo_code AS promos ON orders.promo_code_id = promos.id
                   INNER JOIN region AS regions ON orders.region_id = regions.id
                 """;
+
+        static final String FIND_BY_ID = BASE_SELECT + " WHERE reviews.id = ?";
+    }
+
+    @Override
+    public Review save(Review review) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.INSERT)) {
+                preparedStatement.setString(1, review.getId().toString());
+                preparedStatement.setString(2, review.getOrder().getId().toString());
+                preparedStatement.setInt(3, review.getRating());
+                preparedStatement.setString(4, review.getComment());
+                preparedStatement.executeUpdate();
+                return review;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while saving review.", e);
+            }
+        });
+    }
+
+    @Override
+    public Optional<Review> findById(UUID id) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.FIND_BY_ID)) {
+                preparedStatement.setString(1, id.toString());
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return Optional.of(mapRowToReview(resultSet));
+                    }
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while finding review by id.", e);
+            }
+        });
+    }
+
+    @Override
+    public List<Review> findAll() {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.BASE_SELECT);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+                List<Review> reviewList = new ArrayList<>();
+                while (resultSet.next()) {
+                    reviewList.add(mapRowToReview(resultSet));
+                }
+                return reviewList;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while finding all reviews.", e);
+            }
+        });
+    }
+
+    @Override
+    public boolean update(Review review) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.UPDATE)) {
+                preparedStatement.setInt(1, review.getRating());
+                preparedStatement.setString(2, review.getComment());
+                preparedStatement.setString(3, review.getId().toString());
+                return preparedStatement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while updating review.", e);
+            }
+        });
+    }
+
+    @Override
+    public boolean delete(UUID id) {
+        return execute(connection -> {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.DELETE)) {
+                preparedStatement.setString(1, id.toString());
+                return preparedStatement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                throw new PersistenceException("Error occurred while deleting review.", e);
+            }
+        });
     }
 
     private Review mapRowToReview(ResultSet resultSet) throws SQLException {

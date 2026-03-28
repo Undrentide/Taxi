@@ -4,7 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import ua.solvd.taxi.domain.dal.UserOtherDAO;
+import ua.solvd.taxi.domain.dal.UserOtherDao;
 import ua.solvd.taxi.domain.exception.DataAccessException;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserXMLDAO implements UserOtherDAO {
+public class UserXmlDao implements UserOtherDao {
     private static final String FILE_PATH = "src/main/resources/user.xml";
     private final Document document;
 
-    public UserXMLDAO() {
+    public UserXmlDao() {
         this.document = loadDocument();
     }
 

@@ -5,7 +5,7 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import org.xml.sax.SAXException;
-import ua.solvd.taxi.domain.dal.UserOtherDAO;
+import ua.solvd.taxi.domain.dal.UserOtherDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 import ua.solvd.taxi.domain.model.wrapper.UserListWrapper;
@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJaxbDAO implements UserOtherDAO {
+public class UserJaxbDao implements UserOtherDao {
     private static final String FILE_PATH = "src/main/resources/user_jaxb.xml";
     private static final String XSD_PATH = "src/main/resources/user.xsd";
     private final Schema schema;
     private final JAXBContext jaxbContext;
 
-    public UserJaxbDAO() {
+    public UserJaxbDao() {
         try {
             this.jaxbContext = JAXBContext.newInstance(UserListWrapper.class);
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
