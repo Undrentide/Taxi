@@ -2,13 +2,12 @@ package ua.solvd.taxi.domain.dal;
 
 import ua.solvd.taxi.configuration.JdbcConnectionPool;
 import ua.solvd.taxi.domain.exception.PersistenceException;
-import ua.solvd.taxi.domain.model.Entity;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.function.Function;
 
-public abstract class JdbcDao<T extends Entity> implements Dao<T> {
+public abstract class JdbcAware {
     private static final JdbcConnectionPool jdbcConnectionPool = JdbcConnectionPool.getInstance();
 
     public static <R> R execute(Function<Connection, R> action) {

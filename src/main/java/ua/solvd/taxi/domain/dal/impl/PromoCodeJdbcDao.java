@@ -1,6 +1,7 @@
-package ua.solvd.taxi.domain.dal.jdbcimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.JdbcDao;
+import ua.solvd.taxi.domain.dal.JdbcAware;
+import ua.solvd.taxi.domain.dal.PromoCodeDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.PromoCode;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class PromoCodeJdbcDao extends JdbcDao<PromoCode> {
+public class PromoCodeJdbcDao extends JdbcAware implements PromoCodeDao {
 
     private static final class SqlQuery {
         static final String INSERT = "INSERT INTO promo_code (id, code, discount_percent, is_active) VALUES (?, ?, ?, ?)";
@@ -78,6 +79,7 @@ public class PromoCodeJdbcDao extends JdbcDao<PromoCode> {
         });
     }
 
+    @Override
     public Optional<PromoCode> findByCode(String code) {
         return execute(connection -> {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.FIND_BY_CODE)) {

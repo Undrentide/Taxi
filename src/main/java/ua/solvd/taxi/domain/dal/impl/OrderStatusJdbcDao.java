@@ -1,6 +1,7 @@
-package ua.solvd.taxi.domain.dal.jdbcimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.JdbcDao;
+import ua.solvd.taxi.domain.dal.JdbcAware;
+import ua.solvd.taxi.domain.dal.OrderStatusDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.OrderStatus;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class OrderStatusJdbcDao extends JdbcDao<OrderStatus> {
+public class OrderStatusJdbcDao extends JdbcAware implements OrderStatusDao {
 
     private static final class SqlQuery {
         static final String INSERT = "INSERT INTO order_status (id, name) VALUES (?, ?)";
@@ -76,6 +77,7 @@ public class OrderStatusJdbcDao extends JdbcDao<OrderStatus> {
         });
     }
 
+    @Override
     public Optional<OrderStatus> findByName(String name) {
         return execute(connection -> {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.FIND_BY_NAME)) {

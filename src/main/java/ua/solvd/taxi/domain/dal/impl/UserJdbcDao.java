@@ -1,6 +1,7 @@
-package ua.solvd.taxi.domain.dal.jdbcimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.JdbcDao;
+import ua.solvd.taxi.domain.dal.JdbcAware;
+import ua.solvd.taxi.domain.dal.UserDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Role;
 import ua.solvd.taxi.domain.model.impl.User;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJdbcDao extends JdbcDao<User> {
+public class UserJdbcDao extends JdbcAware implements UserDao {
 
     private static final class SqlQuery {
         static final String FIND_ROLE_ID = "SELECT id FROM role WHERE name = ?";

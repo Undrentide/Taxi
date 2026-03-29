@@ -1,29 +1,28 @@
-package ua.solvd.taxi.domain.service.otherimpl;
+package ua.solvd.taxi.domain.service.impl;
 
-import ua.solvd.taxi.domain.dal.UserOtherDao;
+import ua.solvd.taxi.domain.dal.UserDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 import ua.solvd.taxi.domain.service.UserService;
 
-public class UserServiceOtherImpl implements UserService {
-    private final UserOtherDao userOtherDAO;
+public class UserServiceImpl implements UserService {
+    private final UserDao userDao;
 
-    public UserServiceOtherImpl(UserOtherDao userOtherDAO) {
-        this.userOtherDAO = userOtherDAO;
+    public UserServiceImpl(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     @Override
     public void save(User user) {
-        if (userOtherDAO.findUserByPhone(user.getPhone()).isPresent()) {
+        if (userDao.findUserByPhone(user.getPhone()).isPresent()) {
             throw new PersistenceException("User with this phone already exists.");
         }
-        userOtherDAO.save(user);
+        userDao.save(user);
     }
 
     @Override
     public User findUserByPhone(String phone) {
-        return userOtherDAO.findUserByPhone(phone)
+        return userDao.findUserByPhone(phone)
                 .orElseThrow(() -> new PersistenceException("User with this phone not found."));
     }
-
 }

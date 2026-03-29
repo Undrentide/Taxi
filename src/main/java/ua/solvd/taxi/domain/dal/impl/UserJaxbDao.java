@@ -1,11 +1,11 @@
-package ua.solvd.taxi.domain.dal.otherimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import org.xml.sax.SAXException;
-import ua.solvd.taxi.domain.dal.UserOtherDao;
+import ua.solvd.taxi.domain.dal.UserDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 import ua.solvd.taxi.domain.model.wrapper.UserListWrapper;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJaxbDao implements UserOtherDao {
+public class UserJaxbDao implements UserDao {
     private static final String FILE_PATH = "src/main/resources/user_jaxb.xml";
     private static final String XSD_PATH = "src/main/resources/user.xsd";
     private final Schema schema;

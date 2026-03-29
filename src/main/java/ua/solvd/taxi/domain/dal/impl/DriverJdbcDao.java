@@ -1,6 +1,7 @@
-package ua.solvd.taxi.domain.dal.jdbcimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.JdbcDao;
+import ua.solvd.taxi.domain.dal.DriverDao;
+import ua.solvd.taxi.domain.dal.JdbcAware;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class DriverJdbcDao extends JdbcDao<Driver> {
+public class DriverJdbcDao extends JdbcAware implements DriverDao {
 
     private static final class SqlQuery {
         static final String INSERT = """
@@ -107,6 +108,7 @@ public class DriverJdbcDao extends JdbcDao<Driver> {
         });
     }
 
+    @Override
     public Optional<Driver> findAvailableDriver() {
         return execute(connection -> {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.FIND_AVAILABLE)) {
@@ -136,6 +138,7 @@ public class DriverJdbcDao extends JdbcDao<Driver> {
         });
     }
 
+    @Override
     public boolean updateStatusByPhone(String phone, String statusName) {
         return execute(connection -> {
             try (PreparedStatement preparedStatement = connection.prepareStatement(SqlQuery.UPDATE_STATUS_BY_PHONE)) {

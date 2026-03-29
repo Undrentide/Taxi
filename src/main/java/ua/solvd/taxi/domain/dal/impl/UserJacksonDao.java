@@ -1,10 +1,10 @@
-package ua.solvd.taxi.domain.dal.otherimpl;
+package ua.solvd.taxi.domain.dal.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import ua.solvd.taxi.domain.dal.UserOtherDao;
+import ua.solvd.taxi.domain.dal.UserDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.User;
 
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserJacksonDao implements UserOtherDao {
+public class UserJacksonDao implements UserDao {
     private static final String FILE_PATH = "src/main/resources/user.json";
     private final ObjectMapper mapper;
 
@@ -66,6 +66,7 @@ public class UserJacksonDao implements UserOtherDao {
         return loadData();
     }
 
+    @Override
     public Optional<User> findUserByPhone(String phone) {
         return loadData().stream()
                 .filter(user -> user.getPhone().equals(phone))
