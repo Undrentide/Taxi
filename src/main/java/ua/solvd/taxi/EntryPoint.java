@@ -7,9 +7,8 @@ import ua.solvd.taxi.api.DriverController;
 import ua.solvd.taxi.api.OrderController;
 import ua.solvd.taxi.api.PromoCodeController;
 import ua.solvd.taxi.api.UserController;
-import ua.solvd.taxi.domain.dal.CarDao;
+import ua.solvd.taxi.domain.dal.Dao;
 import ua.solvd.taxi.domain.dal.DriverDao;
-import ua.solvd.taxi.domain.dal.OrderDao;
 import ua.solvd.taxi.domain.dal.OrderStatusDao;
 import ua.solvd.taxi.domain.dal.PromoCodeDao;
 import ua.solvd.taxi.domain.dal.UserDao;
@@ -22,7 +21,9 @@ import ua.solvd.taxi.domain.dal.impl.UserJdbcDao;
 import ua.solvd.taxi.domain.dal.impl.UserJacksonDao;
 import ua.solvd.taxi.domain.dal.impl.UserJaxbDao;
 import ua.solvd.taxi.domain.dal.impl.UserXmlDao;
+import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.Driver;
+import ua.solvd.taxi.domain.model.impl.Order;
 import ua.solvd.taxi.domain.model.impl.PromoCode;
 import ua.solvd.taxi.domain.model.impl.Region;
 import ua.solvd.taxi.domain.model.impl.Role;
@@ -49,12 +50,13 @@ public class EntryPoint {
     private static final UserDao userXmlDao = new UserXmlDao();
     private static final UserDao userJaxbDao = new UserJaxbDao();
     private static final UserDao userJacksonDao = new UserJacksonDao();
-    private static final CarDao carJdbcDao = new CarJdbcDao();
+    private static final Dao<Car> carJdbcDao = new CarJdbcDao();
     private static final DriverDao driverJdbcDao = new DriverJdbcDao();
-    private static final OrderDao orderJdbcDao = new OrderJdbcDao();
+    private static final Dao<Order> orderJdbcDao = new OrderJdbcDao();
     private static final PromoCodeDao promoCodeJdbcDao = new PromoCodeJdbcDao();
     private static final OrderStatusDao orderStatusJdbcDao = new OrderStatusJdbcDao();
 
+    //We can pass whatever DAO impl we need...
     private static final UserService userService = new UserServiceImpl(userJacksonDao);
     private static final CarService carService = new CarServiceImpl(carJdbcDao);
     private static final DriverService driverService = new DriverServiceImpl(driverJdbcDao);

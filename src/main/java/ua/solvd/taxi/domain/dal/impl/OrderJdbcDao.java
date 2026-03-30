@@ -1,7 +1,7 @@
 package ua.solvd.taxi.domain.dal.impl;
 
+import ua.solvd.taxi.domain.dal.Dao;
 import ua.solvd.taxi.domain.dal.JdbcAware;
-import ua.solvd.taxi.domain.dal.OrderDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class OrderJdbcDao extends JdbcAware implements OrderDao {
+public class OrderJdbcDao extends JdbcAware implements Dao<Order> {
 
     private static final class SqlQuery {
         static final String INSERT = """

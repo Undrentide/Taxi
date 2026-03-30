@@ -1,6 +1,6 @@
 package ua.solvd.taxi.domain.dal.impl;
 
-import ua.solvd.taxi.domain.dal.CarDao;
+import ua.solvd.taxi.domain.dal.Dao;
 import ua.solvd.taxi.domain.dal.JdbcAware;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class CarJdbcDao extends JdbcAware implements CarDao {
+public class CarJdbcDao extends JdbcAware implements Dao<Car> {
 
     private static final class SqlQuery {
         static final String FIND_CLASS_ID = "SELECT id FROM car_class WHERE name = ?";

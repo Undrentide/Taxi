@@ -1,7 +1,7 @@
 package ua.solvd.taxi.domain.dal.impl;
 
+import ua.solvd.taxi.domain.dal.Dao;
 import ua.solvd.taxi.domain.dal.JdbcAware;
-import ua.solvd.taxi.domain.dal.ReviewDao;
 import ua.solvd.taxi.domain.exception.PersistenceException;
 import ua.solvd.taxi.domain.model.impl.Car;
 import ua.solvd.taxi.domain.model.impl.CarClass;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class ReviewJdbcDao extends JdbcAware implements ReviewDao {
+public class ReviewJdbcDao extends JdbcAware implements Dao<Review> {
 
     private static final class SqlQuery {
         static final String INSERT = "INSERT INTO review (id, order_id, rating, comment) VALUES (?, ?, ?, ?)";
